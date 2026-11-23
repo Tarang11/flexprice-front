@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { ColumnData } from '@/components/molecules/Table/Table';
-import { AlertTriangle, Copy, Download, Eye, EyeOff, Info, Link2, Lock, Mail, Trash2 } from 'lucide-react';
-import { RouteNames } from '@/core/routes/Routes';
+import { AlertTriangle, Copy, Download, Eye, EyeOff, Info, KeyRound, Lock, Mail, Trash2 } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import type { HttpRejectedError } from '@/core/axios/types';
 import { formatDateShort } from '@/utils/common/helper_functions';
 import {
@@ -29,6 +29,8 @@ import { useCurrentUserPermissions } from '@/hooks/useCurrentUserPermissions';
 import useUser from '@/hooks/useUser';
 import { SUPER_ADMIN_ROLE_ID } from '@/api/RbacApi';
 import { settingsQueryKeys } from '../queryKeys';
+import { config, APP_ENV } from '@/config/config';
+import PasswordLinkDialog, { type PasswordLinkDialogLink } from './PasswordLinkDialog';
 import {
 	filterMembers,
 	getMemberJoinedDate,
@@ -57,6 +59,9 @@ function UsersSection() {
 	const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 	const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
 	const [editingUser, setEditingUser] = useState<SettingsMember | null>(null);
+	const [passwordLink, setPasswordLink] = useState<PasswordLinkDialogLink | null>(null);
+	// Self-hosted stores passwords itself and cannot send email, so members get one-time links instead.
+	const isSelfHosted = config.app.env === APP_ENV.SelfHosted;
 
 	const { isSuperAdmin, can } = useCurrentUserPermissions();
 	const canWriteUser = can('user', 'write');
@@ -215,8 +220,12 @@ function UsersSection() {
 				onSuccess: (res, variables) => {
 					closeUserDialog();
 					setEmail('');
+					if (res.invite_token && res.invite_expires_at) {
+						setPasswordLink({ email: variables.email, purpose: 'invite', token: res.invite_token, expiresAt: res.invite_expires_at });
+						return;
+					}
 					setAddedUserEmail(variables.email);
-					setOneTimePassword(res.password);
+					setOneTimePassword(res.password ?? null);
 					setShowPassword(false);
 					setPasswordDialogOpen(true);
 				},
@@ -229,26 +238,21 @@ function UsersSection() {
 		);
 	};
 
+	const createPasswordLink = useMutation({
+		mutationFn: (member: SettingsMember) => UserApi.createPasswordLink(member.id),
+		onSuccess: (res, member) => {
+			setPasswordLink({ email: member.email, purpose: res.purpose, token: res.token, expiresAt: res.expires_at });
+		},
+		onError: (err: Error) => {
+			toast.error(err.message || t('members.errors.passwordLinkFailed'));
+		},
+	});
+
 	const handleCopyPassword = async () => {
 		if (!oneTimePassword) return;
 		try {
 			await navigator.clipboard.writeText(oneTimePassword);
 			toast.success(t('common:toast.copySuccess'));
-		} catch {
-			toast.error(t('members.errors.copyFailed'));
-		}
-	};
-
-	const loginUrl =
-		addedUserEmail && oneTimePassword
-			? `${window.location.origin}${RouteNames.auth}?email=${encodeURIComponent(addedUserEmail)}&password=${encodeURIComponent(oneTimePassword)}`
-			: '';
-
-	const handleCopyLoginLink = async () => {
-		if (!loginUrl) return;
-		try {
-			await navigator.clipboard.writeText(loginUrl);
-			toast.success(t('members.errors.loginLinkCopied'));
 		} catch {
 			toast.error(t('members.errors.copyFailed'));
 		}
@@ -260,7 +264,6 @@ function UsersSection() {
 			t('members.credentials.copyBlockEmailLine', { email: addedUserEmail }),
 			t('members.credentials.copyBlockPasswordLine', { password: oneTimePassword }),
 		];
-		if (loginUrl) lines.push(t('members.credentials.copyBlockLoginLine', { url: loginUrl }));
 		try {
 			await navigator.clipboard.writeText(lines.join('\n'));
 			toast.success(t('members.errors.credentialsCopied'));
@@ -277,7 +280,7 @@ function UsersSection() {
 	const handleDownloadCsv = () => {
 		if (!addedUserEmail || !oneTimePassword) return;
 		const header = t('members.credentials.csvHeader');
-		const row = [escapeCsvCell(addedUserEmail), escapeCsvCell(oneTimePassword), escapeCsvCell(loginUrl)];
+		const row = [escapeCsvCell(addedUserEmail), escapeCsvCell(oneTimePassword)];
 		const csv = `${header}\r\n${row.join(',')}`;
 		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
 		const url = URL.createObjectURL(blob);
@@ -336,6 +339,17 @@ function UsersSection() {
 							text: t('members.actions.remove'),
 							icon: <Trash2 className='h-4 w-4' />,
 						}}
+						customActions={
+							isSelfHosted
+								? [
+										{
+											text: t('members.actions.resetPassword'),
+											icon: <KeyRound className='h-4 w-4' />,
+											onClick: () => createPasswordLink.mutate(row),
+										},
+									]
+								: undefined
+						}
 					/>
 				);
 			},
@@ -535,23 +549,7 @@ function UsersSection() {
 						</div>
 					</div>
 
-					{loginUrl && (
-						<div className='border-t border-line-subtle pt-4'>
-							<p className='mb-2 text-xs text-content-zinc-muted'>{t('members.credentials.oneClickHint')}</p>
-							<div className='flex items-center gap-2 rounded-md border border-line bg-surface-faint px-3 py-2'>
-								<Link2 className='h-4 w-4 flex-shrink-0 text-content-zinc-subtle' />
-								<span className='min-w-0 flex-1 truncate text-sm text-content-zinc-tertiary' title={loginUrl}>
-									{loginUrl.length > 44 ? `${loginUrl.slice(0, 44)}…` : loginUrl}
-								</span>
-							</div>
-						</div>
-					)}
-
 					<div className='flex flex-wrap items-center gap-2 border-t border-line-subtle pt-4'>
-						<Button onClick={handleCopyLoginLink} className='shrink-0'>
-							<Link2 className='mr-1.5 h-3.5 w-3.5' />
-							{t('members.credentials.copyLoginLink')}
-						</Button>
 						<Button variant='outline' size='sm' onClick={handleDownloadCsv} className='shrink-0'>
 							<Download className='mr-1.5 h-3.5 w-3.5' />
 							{t('members.credentials.downloadCsv')}
@@ -576,6 +574,8 @@ function UsersSection() {
 			</Dialog>
 
 			<EditUserRolesDialog user={editingUser} isOpen={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)} />
+
+			<PasswordLinkDialog link={passwordLink} onClose={() => setPasswordLink(null)} />
 		</>
 	);
 }

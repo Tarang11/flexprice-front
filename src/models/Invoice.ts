@@ -16,6 +16,8 @@ export interface Invoice extends BaseModel {
 	readonly billing_period: BILLING_CADENCE;
 	readonly currency: string;
 	readonly invoice_pdf_url: string;
+	/** Public hosted invoice page. Present on search results when the invoice has been issued. */
+	readonly hosted_invoice_url?: string;
 	readonly amount_due: number;
 	readonly subtotal: number;
 	readonly total: number;
@@ -35,6 +37,7 @@ export interface Invoice extends BaseModel {
 	readonly billing_reason: INVOICE_BILLING_REASON;
 	readonly line_items: LineItem[];
 	readonly total_tax: number;
+	readonly tax_summary?: InvoiceTaxSummary;
 	readonly version: number;
 	readonly tenant_id: string;
 	readonly subscription: Subscription;
@@ -133,4 +136,17 @@ export enum INVOICE_BILLING_REASON {
 	SUBSCRIPTION_UPDATE = 'SUBSCRIPTION_UPDATE',
 	PRORATION = 'PRORATION',
 	MANUAL = 'MANUAL',
+}
+
+// Breakdown of an invoice's tax by behavior. Inclusive tax is already inside the
+// subtotal and never adds to the total; only exclusive tax does.
+export interface InvoiceTaxSummary {
+	readonly inclusive_tax: string;
+	readonly exclusive_tax: string;
+	readonly total_tax: string;
+	// Non-null only when no tax was charged.
+	readonly exemption: {
+		readonly reason_code: string;
+		readonly reason: string;
+	} | null;
 }

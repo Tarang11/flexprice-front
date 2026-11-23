@@ -7,6 +7,7 @@ import { Suspense } from 'react';
 import { Loader } from '@/components/atoms';
 import { config } from '@/config/config';
 import { requirePermission } from '@/core/routes/useRouteAccess';
+import { RESET_PASSWORD_PATH } from '@/pages/auth/authTabs';
 import {
 	// Auth pages
 	Auth,
@@ -14,6 +15,7 @@ import {
 	ResendVerification,
 	EmailVerification,
 	SamlCallback,
+	OAuthConsent,
 	// Customer pages
 	CustomerListPage as CustomerPage,
 	Subscriptions as SubscriptionsPage,
@@ -103,16 +105,26 @@ import { RouterErrorElement } from '@/components/atoms/ErrorBoundary';
 export const RouteNames = {
 	// customer portal
 	customerPortal: '/customer-portal',
+	// Where a payment provider sends the customer back: success_url and cancel_url.
+	customerPortalCheckoutSuccess: '/customer-portal/checkout/success',
+	customerPortalCheckoutFailure: '/customer-portal/checkout/failure',
 
 	home: '/',
 	login: '/login',
 	auth: '/auth',
 	signupConfirmation: '/auth/signup/confirmation',
+	// Where a Supabase password-reset email sends the browser. Defined in
+	// pages/auth/authTabs so the tab resolver can read it without importing this
+	// module; must be in the Supabase project's Redirect URLs allow-list.
+	resetPassword: RESET_PASSWORD_PATH,
 	resendVerification: '/auth/resend-verification',
 	verifyEmail: '/auth/verify-email',
 	// Where the backend sends the browser after it validates a SAML assertion.
 	// Must match auth.saml.dashboard_url in the backend configuration.
 	samlCallback: '/auth/callback',
+	// Where Supabase sends the browser when an app asks to act for a user.
+	// Must match the Authorization Path set in Supabase (Authentication > OAuth Server).
+	oauthConsent: '/oauth/consent',
 
 	// Dashboard routes
 	homeDashboard: '/home',
@@ -223,6 +235,12 @@ export const MainRouter: any = createBrowserRouter([
 		element: <SignupConfirmation />,
 	},
 	{
+		// Same component as /auth: it resolves which form to show from the path, so
+		// the branded template and every other tab keep working unchanged.
+		path: RouteNames.resetPassword,
+		element: <Auth />,
+	},
+	{
 		path: RouteNames.resendVerification,
 		element: <ResendVerification />,
 	},
@@ -237,7 +255,22 @@ export const MainRouter: any = createBrowserRouter([
 		element: <SamlCallback />,
 	},
 	{
+		// Public: the page checks the Supabase session itself and sends a
+		// signed-out user to the login page with the way back.
+		path: RouteNames.oauthConsent,
+		element: <OAuthConsent />,
+	},
+	{
 		path: RouteNames.customerPortal,
+		element: <CustomerPortalWrapper />,
+	},
+	{
+		// Public: the return pages must work in a browser with no portal session.
+		path: RouteNames.customerPortalCheckoutSuccess,
+		element: <CustomerPortalWrapper />,
+	},
+	{
+		path: RouteNames.customerPortalCheckoutFailure,
 		element: <CustomerPortalWrapper />,
 	},
 	{

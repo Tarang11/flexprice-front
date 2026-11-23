@@ -207,7 +207,7 @@ const CustomerInvoiceDetail: FC<Props> = ({ invoice_id, breadcrumb_index }) => {
 						<div className='text-left'>
 							<FormHeader className='!mb-2' title={user?.tenant.name} variant='sub-header' titleClassName='font-semibold' />
 							<p className={customerInfoClass}>{user?.tenant.name}</p>
-							<p className={customerInfoClass}>{user?.email}</p>
+							{user?.tenant.billing_details?.email ? <p className={customerInfoClass}>{user.tenant.billing_details.email}</p> : null}
 							<p className={cn(customerInfoClass, 'max-w-xs')}>{tenantAddress || na}</p>
 						</div>
 
@@ -261,6 +261,7 @@ const CustomerInvoiceDetail: FC<Props> = ({ invoice_id, breadcrumb_index }) => {
 						total_prepaid_credits_applied={data?.total_prepaid_credits_applied}
 						discount={data?.total_discount}
 						total_tax={data?.total_tax}
+						tax_summary={data?.tax_summary}
 						amount_paid={data?.amount_paid}
 						overpaid_amount={data?.overpaid_amount}
 						amount_remaining={Number(data?.amount_remaining)}

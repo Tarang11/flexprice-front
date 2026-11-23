@@ -2,7 +2,11 @@
 	"wrapper": {
 		"invalidLinkTitle": "رابط بوابة العميل غير صالح",
 		"invalidLinkDescription": "رمز جلسة لوحة التحكم غير موجود في عنوان URL. يُرجى التحقق من الرابط والمحاولة مرة أخرى.",
-		"refreshPage": "تحديث الصفحة"
+		"refreshPage": "تحديث الصفحة",
+		"checkoutReturnTitle": "جارٍ تأكيد دفعتك",
+		"checkoutReturnDescription": "نتحقق من كل دفعة مع مزوّد الدفع قبل تطبيقها. بعد تأكيدها ستظهر في صفحة الفوترة. يستغرق ذلك عادةً بضع دقائق، ولا تحتاج إلى فعل أي شيء آخر. يمكنك إغلاق هذه الصفحة.",
+		"checkoutReturnFailedTitle": "لم تكتمل عملية الدفع",
+		"checkoutReturnFailedDescription": "انتهت عملية الدفع قبل تأكيد الدفعة. إذا كنت قد أكملت الدفع، فسيتم تطبيقه، لذا تحقق من صفحة الفوترة قبل المحاولة مرة أخرى."
 	},
 	"footer": {
 		"poweredBy": "مدعوم بواسطة",
@@ -160,6 +164,7 @@
 	"usageBreakdown": {
 		"feature": "الميزة",
 		"totalUsage": "إجمالي الاستخدام",
+		"unitPrice": "سعر الوحدة",
 		"totalCost": "إجمالي التكلفة",
 		"noGroup": "بلا مجموعة",
 		"expandAllAria": "توسيع الكل",
@@ -170,7 +175,6 @@
 	},
 	"metrics": {
 		"revenue": "الإيرادات",
-		"cost": "التكلفة",
 		"margin": "الهامش",
 		"marginPercent": "الهامش %",
 		"cpm": "CPM"
@@ -196,6 +200,14 @@
 		"providerLabel": "مزوّد الدفع",
 		"providerHint": "اختر المزوّد الذي تريد إتمام الدفع من خلاله.",
 		"paid": "اكتمل الدفع — تمت إضافة أرصدتك."
+	},
+	"pendingCheckout": {
+		"title": "هناك عملية دفع قيد التنفيذ بالفعل",
+		"description": "بدأت عملية شحن لهذه المحفظة ولم تكتمل بعد. أكمل تلك العملية، أو ألغِها وابدأ عملية جديدة.",
+		"continueExisting": "متابعة تلك العملية",
+		"noLink": "تتم معالجة تلك العملية ولا يمكن فتحها من هنا.",
+		"startNew": "إلغاؤها والبدء من جديد",
+		"startNewHint": "سيتم إلغاء العملية السابقة. إذا كان قد تم خصم المبلغ منك بالفعل، فلا تبدأ من جديد — الأرصدة في طريقها إليك."
 	},
 	"autoTopUp": {
 		"title": "الشحن التلقائي",
@@ -260,7 +272,11 @@
 		"rowActions": "إجراءات {{method}}",
 		"alreadyDefault": "هذه بطاقتك الافتراضية بالفعل.",
 		"setDefaultUnsupported": "مزوّد الدفع لديك لا يدعم تعيين بطاقة كطريقة دفع افتراضية.",
-		"expiredCannotDefault": "لا يمكن تعيين بطاقة منتهية كافتراضية."
+		"expiredCannotDefault": "لا يمكن تعيين بطاقة منتهية كافتراضية.",
+		"allProviders": "جميع المزوّدين",
+		"addForProvider": "إضافة بطاقة ({{provider}})",
+		"providerEmptyTitle": "لا توجد بطاقات محفوظة لدى {{provider}}",
+		"providerEmptyDescription": "أضف بطاقة عبر {{provider}} لدفع الفواتير وتفعيل الشحن التلقائي"
 	},
 	"invoiceDetail": {
 		"title": "الفاتورة",
@@ -313,5 +329,31 @@
 	"section": {
 		"emptyTitle": "لا يوجد شيء لعرضه هنا",
 		"emptyDescription": "لم يتم إعداد أي محتوى لهذا القسم بعد."
+	},
+	"usageFilters": {
+		"groupBy": "تجميع حسب",
+		"groupByKey": "تجميع حسب: {{key}}",
+		"noGrouping": "بدون",
+		"filter": "تصفية",
+		"filterCount": "تصفية ({{count}})",
+		"allFeatures": "جميع الميزات",
+		"featureCount_zero": "{{count}} ميزة",
+		"featureCount_one": "ميزة واحدة",
+		"featureCount_two": "ميزتان",
+		"featureCount_few": "{{count}} ميزات",
+		"featureCount_many": "{{count}} ميزة",
+		"featureCount_other": "{{count}} ميزة",
+		"searchFeatures": "ابحث في الميزات",
+		"searchProperties": "ابحث في الخصائص",
+		"searchValues": "ابحث في القيم",
+		"noResults": "لا توجد نتائج",
+		"noValues": "لم يتم العثور على قيم",
+		"loading": "جارٍ التحميل…",
+		"apply": "تطبيق",
+		"back": "رجوع",
+		"clearAll": "مسح الكل",
+		"removeFilter": "إزالة تصفية {{key}}",
+		"noValue": "(بدون)",
+		"other": "أخرى"
 	}
 }

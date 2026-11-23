@@ -10,7 +10,7 @@ import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { PriceApi } from '@/api/PriceApi';
 import { UpdatePriceRequest } from '@/types/dto';
-import { BUCKET_SIZE_NONE, priceBucketSizeOptions } from '@/constants/constants';
+import { BUCKET_SIZE_NONE, priceBucketSizeOptionsWithNone } from '@/constants/constants';
 import { formatDateTimeWithSecondsAndTimezone } from '@/utils/common/format_date';
 import { PremiumFeatureIcon } from '../PremiumFeature/PremiumFeature';
 import { useMeterForCommitment } from '@/hooks/useMeterForCommitment';
@@ -24,6 +24,7 @@ import {
 	withoutPercentageMetadata,
 } from '@/utils/common/percentage_price_helpers';
 import { formatPercentageAmount } from '@/utils/common/price_helpers';
+import { billingModelSelectValueFromPrice, resolveBillingModelFromSelect } from '@/utils/common/commitment_time_bucket_draft';
 import { useTranslation } from 'react-i18next';
 
 interface UpdatePriceDialogProps {
@@ -55,7 +56,7 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 	const [overrideAmount, setOverrideAmount] = useState('');
 	const [overrideQuantity, setOverrideQuantity] = useState<number | undefined>(undefined);
 	const [overrideBillingModel, setOverrideBillingModel] = useState<BILLING_MODEL | 'SLAB_TIERED' | PercentageBillingModel>(
-		isPercentage ? PERCENTAGE_BILLING_MODEL : price.billing_model,
+		isPercentage ? PERCENTAGE_BILLING_MODEL : billingModelSelectValueFromPrice(price),
 	);
 	const [overrideTierMode, setOverrideTierMode] = useState<TIER_MODE>(price.tier_mode || TIER_MODE.VOLUME);
 	const [overrideTiers, setOverrideTiers] = useState<CreatePriceTier[]>([]);
@@ -79,7 +80,7 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 	useEffect(() => {
 		if (isOpen) {
 			setOverrideQuantity(1);
-			setOverrideBillingModel(isPercentage ? PERCENTAGE_BILLING_MODEL : price.billing_model);
+			setOverrideBillingModel(isPercentage ? PERCENTAGE_BILLING_MODEL : billingModelSelectValueFromPrice(price));
 			setOverrideTierMode(price.tier_mode || TIER_MODE.VOLUME);
 
 			// Initialize amount and tiers based on price unit type
@@ -154,6 +155,11 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 	const handleUpdate = async () => {
 		const updateData: UpdatePriceRequest = {};
 		const willBePercentage = overrideBillingModel === PERCENTAGE_BILLING_MODEL;
+		const resolvedBillingModel = willBePercentage ? BILLING_MODEL.FLAT_FEE : overrideBillingModel;
+		const sourceBillingModel = billingModelSelectValueFromPrice(price);
+		const billingModelChanged = resolvedBillingModel !== sourceBillingModel;
+		// A switch sends the amount even if unchanged, except a tiered price's placeholder "0".
+		const sendAmountOnSwitch = billingModelChanged && sourceBillingModel !== BILLING_MODEL.TIERED && sourceBillingModel !== 'SLAB_TIERED';
 
 		// Handle amount/price_unit_amount based on price unit type and billing model
 		if (overrideBillingModel !== BILLING_MODEL.TIERED && overrideBillingModel !== 'SLAB_TIERED') {
@@ -162,12 +168,12 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 			if (isCustomPriceUnit) {
 				// For CUSTOM prices, use price_unit_amount
 				const originalAmount = price.price_unit_amount || price.price_unit_config?.amount || '';
-				if (enteredAmount && enteredAmount !== originalAmount) {
+				if (enteredAmount && (sendAmountOnSwitch || enteredAmount !== originalAmount)) {
 					updateData.price_unit_amount = enteredAmount;
 				}
 			} else {
 				// For FIAT prices, use amount
-				if (enteredAmount && enteredAmount !== price.amount) {
+				if (enteredAmount && (sendAmountOnSwitch || enteredAmount !== price.amount)) {
 					updateData.amount = enteredAmount;
 				}
 			}
@@ -178,13 +184,8 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 		if (willBePercentage !== isPercentage) {
 			updateData.metadata = willBePercentage ? withPercentageMetadata(price.metadata) : (withoutPercentageMetadata(price.metadata) ?? {});
 		}
-		const resolvedBillingModel = willBePercentage ? BILLING_MODEL.FLAT_FEE : overrideBillingModel;
-		if (resolvedBillingModel !== price.billing_model) {
-			if (resolvedBillingModel === 'SLAB_TIERED') {
-				updateData.billing_model = BILLING_MODEL.TIERED;
-			} else {
-				updateData.billing_model = resolvedBillingModel as BILLING_MODEL;
-			}
+		if (billingModelChanged) {
+			Object.assign(updateData, resolveBillingModelFromSelect(resolvedBillingModel));
 		}
 
 		// Tier mode override
@@ -207,7 +208,7 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 		if (overrideBillingModel === BILLING_MODEL.PACKAGE) {
 			updateData.transform_quantity = {
 				...overrideTransformQuantity,
-				divide_by: overrideQuantity || overrideTransformQuantity.divide_by,
+				divide_by: overrideTransformQuantity.divide_by,
 			};
 		}
 
@@ -220,6 +221,11 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 		// Include effective_from if provided
 		if (effectiveFrom) {
 			updateData.effective_from = effectiveFrom.toISOString();
+		}
+
+		if (effectiveFrom && Object.keys(updateData).length === 1) {
+			toast.error(t('priceDialogs.scheduleNeedsChange'));
+			return;
 		}
 
 		try {
@@ -378,9 +384,9 @@ const UpdatePriceDialog: FC<UpdatePriceDialogProps> = ({ isOpen, onOpenChange, p
 						<div className='space-y-2'>
 							<label className='text-sm font-medium text-content-secondary'>{t('priceDialogs.bucketSize')}</label>
 							<Select
-								value={overrideBucketSize}
-								onChange={(value) => setOverrideBucketSize(value as PriceBucketSize)}
-								options={priceBucketSizeOptions}
+								value={overrideBucketSize || BUCKET_SIZE_NONE}
+								onChange={(value) => setOverrideBucketSize(value === BUCKET_SIZE_NONE ? '' : (value as PriceBucketSize))}
+								options={priceBucketSizeOptionsWithNone}
 								placeholder={t('priceDialogs.bucketSizePlaceholder')}
 								disabled={!!meterBucketSize}
 								description={meterBucketSize ? t('priceDialogs.bucketSizeSetOnMeter', { bucketSize: meterBucketSize }) : undefined}

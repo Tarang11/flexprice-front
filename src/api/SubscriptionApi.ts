@@ -11,6 +11,9 @@ import {
 	UpdateSubscriptionRequest,
 	CancelSubscriptionRequest,
 	CancelSubscriptionResponse,
+	PauseSubscriptionRequest,
+	ResumeSubscriptionRequest,
+	SubscriptionPauseActionResponse,
 	SubscriptionResponse,
 	GetUsageBySubscriptionRequest,
 	GetUsageBySubscriptionResponse,
@@ -101,6 +104,20 @@ class SubscriptionApi {
 		payload: CancelSubscriptionPayload | CancelSubscriptionRequest,
 	): Promise<void | CancelSubscriptionResponse> {
 		return await AxiosClient.post(`${this.baseUrl}/${id}/cancel`, payload);
+	}
+
+	/**
+	 * Pause subscription now
+	 */
+	public static async pauseSubscription(id: string, payload: PauseSubscriptionRequest): Promise<SubscriptionPauseActionResponse> {
+		return await AxiosClient.post<SubscriptionPauseActionResponse>(`${this.baseUrl}/${id}/pause`, payload);
+	}
+
+	/**
+	 * Resume paused subscription now
+	 */
+	public static async resumeSubscription(id: string, payload: ResumeSubscriptionRequest): Promise<SubscriptionPauseActionResponse> {
+		return await AxiosClient.post<SubscriptionPauseActionResponse>(`${this.baseUrl}/${id}/resume`, payload);
 	}
 
 	// =============================================================================
@@ -256,7 +273,7 @@ class SubscriptionApi {
 	}
 
 	// =============================================================================
-	// SUBSCRIPTION MODIFY METHODS (inheritance | quantity_change | grouped_invoicing)
+	// SUBSCRIPTION MODIFY METHODS (inheritance | line_item_change | grouped_invoicing)
 	// =============================================================================
 
 	/**
@@ -271,7 +288,7 @@ class SubscriptionApi {
 	}
 
 	/**
-	 * Execute mid-cycle subscription modification (`inheritance`, `quantity_change`, or `grouped_invoicing`).
+	 * Execute mid-cycle subscription modification (`inheritance`, `line_item_change`, or `grouped_invoicing`).
 	 * POST /subscriptions/:id/modify/execute
 	 */
 	public static async executeSubscriptionModify(

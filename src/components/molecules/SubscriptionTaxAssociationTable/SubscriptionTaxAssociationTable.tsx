@@ -1,10 +1,11 @@
 import { FC, useState } from 'react';
 import FlexpriceTable, { ColumnData } from '../Table';
-import { TaxRateOverride } from '@/types/dto/tax';
+import { TaxRateOverride, CreateTaxAssociationRequest } from '@/types/dto/tax';
 import { Chip, ActionButton, AddButton, FormHeader } from '@/components/atoms';
 import TaxAssociationDialog from '../TaxAssociationDialog/TaxAssociationDialog';
-import { TAXRATE_ENTITY_TYPE } from '@/models/Tax';
+import { TAX_BEHAVIOR, TAXRATE_ENTITY_TYPE } from '@/models/Tax';
 import { useTranslation } from 'react-i18next';
+import { useExternalTaxEngine } from '@/hooks/useExternalTaxEngine';
 
 interface Props {
 	data: TaxRateOverride[];
@@ -15,15 +16,19 @@ interface Props {
 const SubscriptionTaxAssociationTable: FC<Props> = ({ data, onChange, disabled }) => {
 	const { t } = useTranslation('common');
 	const [isOpen, setIsOpen] = useState(false);
+	// Overrides are rejected by the backend while an external engine is in force, so
+	// the control is disabled with the reason rather than failing on submit.
+	const { isExternal: isExternalTaxEngine, provider: taxProvider } = useExternalTaxEngine();
 	const [selectedTaxOverride, setSelectedTaxOverride] = useState<TaxRateOverride | null>(null);
 
-	const handleSave = (taxAssociationRequest: any) => {
+	const handleSave = (taxAssociationRequest: CreateTaxAssociationRequest) => {
 		// Convert CreateTaxAssociationRequest to TaxRateOverride
 		const newTaxOverride: TaxRateOverride = {
 			tax_rate_code: taxAssociationRequest.tax_rate_code,
 			priority: taxAssociationRequest.priority,
-			currency: taxAssociationRequest.currency.toLowerCase(),
+			currency: (taxAssociationRequest.currency || 'usd').toLowerCase(),
 			auto_apply: taxAssociationRequest.auto_apply,
+			tax_behavior: taxAssociationRequest.tax_behavior,
 		};
 
 		if (selectedTaxOverride) {
@@ -60,6 +65,11 @@ const SubscriptionTaxAssociationTable: FC<Props> = ({ data, onChange, disabled }
 		{
 			title: 'Auto Apply',
 			render: (row) => <Chip variant={row.auto_apply ? 'success' : 'default'} label={row.auto_apply ? t('labels.yes') : t('labels.no')} />,
+		},
+		{
+			title: 'Tax Behavior',
+			render: (row) =>
+				row.tax_behavior === TAX_BEHAVIOR.INCLUSIVE ? t('taxAssociation.taxBehaviorInclusive') : t('taxAssociation.taxBehaviorExclusive'),
 		},
 		{
 			title: 'Currency',
@@ -103,6 +113,7 @@ const SubscriptionTaxAssociationTable: FC<Props> = ({ data, onChange, disabled }
 					priority: selectedTaxOverride?.priority || 1,
 					currency: selectedTaxOverride?.currency || 'usd',
 					auto_apply: selectedTaxOverride?.auto_apply || true,
+					tax_behavior: selectedTaxOverride?.tax_behavior || TAX_BEHAVIOR.EXCLUSIVE,
 				}}
 				onCancel={() => {
 					setIsOpen(false);
@@ -117,9 +128,12 @@ const SubscriptionTaxAssociationTable: FC<Props> = ({ data, onChange, disabled }
 							setSelectedTaxOverride(null);
 							setIsOpen(true);
 						}}
-						disabled={disabled}
+						disabled={disabled || isExternalTaxEngine}
 					/>
 				</div>
+				{isExternalTaxEngine && (
+					<p className='text-xs text-content-muted'>{t('labels.taxExternalEngineNote', { provider: taxProvider })}</p>
+				)}
 				<div className='rounded-[6px] border border-line-strong'>
 					<FlexpriceTable data={data} columns={columns} showEmptyRow />
 				</div>

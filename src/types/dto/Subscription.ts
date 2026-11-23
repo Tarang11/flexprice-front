@@ -1,6 +1,8 @@
+import type { SubscriptionEntitlementGrantDraft } from './Entitlement';
 import {
 	BILLING_CADENCE,
 	LineItem as InvoiceLineItem,
+	InvoiceTaxSummary,
 	BILLING_CYCLE,
 	SUBSCRIPTION_STATUS,
 	GROUPED_INVOICING_MODIFY_ACTION,
@@ -28,11 +30,17 @@ import {
 	PRICE_UNIT_TYPE,
 	INVOICE_CADENCE,
 	PriceBucketSize,
+	GrantState,
+	Entitlement,
+	ENTITLEMENT_GRANT_MEASURE,
+	ENTITLEMENT_GRANT_DURATION_UNIT,
+	ENTITLEMENT_GRANT_ALLOCATION_BEHAVIOR,
+	ENTITLEMENT_AGGREGATION_MODE,
 } from '@/models';
 import { PriceUnitConfig, PriceResponse } from '@/types/dto/Price';
 import { BILLING_PERIOD, BUCKET_SIZE_NONE } from '@/constants/constants';
 import { QueryFilter, TimeRangeFilter } from './base';
-import { AddAddonToSubscriptionRequest, ADDON_CADENCE, ADDON_PRORATION_BEHAVIOR } from './Addon';
+import { AddAddonToSubscriptionRequest, ADDON_CADENCE, ADDON_CHANGE_AT, ADDON_PRORATION_BEHAVIOR } from './Addon';
 export { ADDON_CADENCE as AddonCadence, ADDON_PRORATION_BEHAVIOR as ProrationBehavior } from './Addon';
 import { Invoice } from '@/models/Invoice';
 import type { WalletTransaction } from '@/models/WalletTransaction';
@@ -144,6 +152,7 @@ export interface GetSubscriptionPreviewResponse {
 	voided_at: string;
 	total_discount: number;
 	total_tax: number;
+	tax_summary?: InvoiceTaxSummary;
 }
 
 // Subscription Change Types
@@ -190,7 +199,7 @@ export interface ExecuteSubscriptionChangeResponse {
 }
 
 // =============================================================================
-// SUBSCRIPTION MID-CYCLE MODIFICATION (inheritance | quantity_change | grouped_invoicing)
+// SUBSCRIPTION MID-CYCLE MODIFICATION (inheritance | line_item_change | grouped_invoicing)
 // POST /subscriptions/:id/modify/preview | /modify/execute
 // Enums live in @/models/Subscription; re-exported here for dto module consumers.
 // =============================================================================
@@ -209,17 +218,23 @@ export interface SubModifyInheritanceRequest {
 	external_customer_ids_to_inherit_subscription?: string[];
 }
 
-/** Single line item quantity change; quantity is a decimal string in API JSON. */
-export interface LineItemQuantityChange {
+/**
+ * Single fixed-charge edit. At least one of `quantity` / `amount` must be set;
+ * an omitted field keeps its current value. Decimals are strings in API JSON.
+ */
+export interface LineItemChange {
+	/** Subscription line item id (not the price id). */
 	id: string;
-	quantity: string;
-	/** ISO 8601; omit for effective immediately. */
+	quantity?: string;
+	/** New per-unit price in the subscription currency. Flat-fee, fiat prices only. */
+	amount?: string;
+	/** ISO 8601, inside the current billing period; omit for effective immediately. */
 	effective_date?: string;
 }
 
-/** Payload when type is `quantity_change`. */
-export interface SubModifyQuantityChangeRequest {
-	line_items: LineItemQuantityChange[];
+/** Payload when type is `line_item_change`. */
+export interface SubModifyLineItemChangeRequest {
+	line_items: LineItemChange[];
 }
 
 /** Payload when type is `grouped_invoicing` — add or remove grouped-invoicing child subscriptions. */
@@ -230,14 +245,27 @@ export interface SubModifyGroupedInvoicingParams {
 	child_subscription_ids: string[];
 }
 
+/** One addon attach inside `addon_bulk_params.adds` — the single add request minus the subscription id (it comes from the URL). */
+export type SubModifyAddonAdd = Omit<AddAddonRequest, 'subscription_id'>;
+
+/** One addon removal inside `addon_bulk_params.removes`. */
+export type SubModifyAddonRemove = RemoveAddonRequest;
+
+/** Payload when type is `addon` — add and/or remove several addons as one change (max 20 entries in total). */
+export interface SubModifyAddonBulkParams {
+	adds?: SubModifyAddonAdd[];
+	removes?: SubModifyAddonRemove[];
+}
+
 /** Unified body for modify preview and execute (exactly one params object must match `type`). */
 export interface ExecuteSubscriptionModifyRequest {
 	type: SubscriptionModifyType;
 	inheritance_params?: SubModifyInheritanceRequest;
-	quantity_change_params?: SubModifyQuantityChangeRequest;
+	line_item_change_params?: SubModifyLineItemChangeRequest;
 	grouped_invoicing_params?: SubModifyGroupedInvoicingParams;
 	coupon_params?: SubModifyCouponParams;
 	tax_params?: SubModifyTaxParams;
+	addon_bulk_params?: SubModifyAddonBulkParams;
 }
 
 export interface ChangedLineItem {
@@ -309,7 +337,22 @@ export interface SubscriptionInheritanceConfig {
 	subscriptions_ids_for_grouped_invoicing?: string[];
 }
 
+/** One subscription-scope rate created with the subscription; the window is [start_date, end_date). */
+export interface InlineFxRateRequest {
+	rate: string;
+	start_date?: string;
+	end_date?: string;
+}
+
+/** A row in the create form's FX Overrides table; `id` is local only. */
+export interface SubscriptionFxRateRow extends InlineFxRateRequest {
+	id: string;
+}
+
 export interface CreateSubscriptionRequest {
+	/** Dollar allowances shared by every usage line, created with the subscription. */
+	subscription_entitlement_grants?: SubscriptionEntitlementGrantDraft[];
+	fx_rates?: InlineFxRateRequest[];
 	// Customer identification - prioritized over external_customer_id if both provided
 	customer_id?: string;
 	external_customer_id?: string;
@@ -364,7 +407,7 @@ export interface CreateSubscriptionRequest {
 	gateway_payment_method_id?: string;
 	collection_method?: COLLECTION_METHOD;
 
-	// PaymentTerms (e.g. 15 NET, 30 NET) used to compute invoice due date from period end
+	// PaymentTerms (e.g. 15 NET, END_OF_MONTH) used to compute invoice due date from the invoice issue date
 	payment_terms?: PAYMENT_TERMS;
 
 	// Proration behavior
@@ -508,6 +551,39 @@ export interface CancelSubscriptionResponse {
 	processed_at: string;
 }
 
+/** Pauses an active subscription now; proration_behavior prices the closing invoice (defaults to none). */
+export interface PauseSubscriptionRequest {
+	proration_behavior?: SUBSCRIPTION_PRORATION_BEHAVIOR;
+	reason?: string;
+	metadata?: Record<string, string>;
+}
+
+/** Resumes a paused subscription now; proration_behavior, when sent, is saved on the subscription. */
+export interface ResumeSubscriptionRequest {
+	proration_behavior?: SUBSCRIPTION_PRORATION_BEHAVIOR;
+	metadata?: Record<string, string>;
+}
+
+export interface SubscriptionPause {
+	id: string;
+	subscription_id: string;
+	pause_status: string;
+	pause_mode: string;
+	resume_mode?: string;
+	pause_start: string;
+	resumed_at?: string;
+	original_period_start: string;
+	original_period_end: string;
+	reason?: string;
+	metadata?: Record<string, string>;
+}
+
+/** Response of both the pause and the resume endpoints. */
+export interface SubscriptionPauseActionResponse {
+	subscription: SubscriptionResponse;
+	pause: SubscriptionPause;
+}
+
 export interface ProrationDetail {
 	line_item_id: string;
 	price_id: string;
@@ -578,6 +654,8 @@ export interface AddAddonRequest {
 	subscription_id: string;
 	addon_id: string;
 	start_date?: string;
+	/** When the attach applies. Mutually exclusive with `start_date`; omit both to attach now. */
+	change_at?: ADDON_CHANGE_AT;
 	cadence?: ADDON_CADENCE;
 	proration_behavior?: ADDON_PRORATION_BEHAVIOR;
 	metadata?: Metadata;
@@ -590,7 +668,9 @@ export interface RemoveAddonRequest {
 	addon_association_id: string;
 	reason?: string;
 	proration_behavior?: ADDON_PRORATION_BEHAVIOR;
+	/** Custom end date. Mutually exclusive with `change_at`; omit both to remove at period end. */
 	effective_date?: string;
+	change_at?: ADDON_CHANGE_AT;
 }
 
 export interface AddonAssociationResponse {
@@ -812,6 +892,18 @@ export interface EntitlementOverrideRequest {
 	static_value?: string;
 	is_enabled?: boolean;
 	config_value?: JsonObject;
+
+	// Grant config. Omitted fields inherit from the plan entitlement being
+	// overridden, so an override that only changes the quota keeps the plan's
+	// cadence instead of downgrading the feature to a legacy limit.
+	grant_measure?: ENTITLEMENT_GRANT_MEASURE;
+	grant_quota?: string;
+	grant_duration_value?: number;
+	grant_duration_unit?: ENTITLEMENT_GRANT_DURATION_UNIT;
+	grant_allocation_behavior?: ENTITLEMENT_GRANT_ALLOCATION_BEHAVIOR;
+	aggregation_mode?: ENTITLEMENT_AGGREGATION_MODE;
+	/** An allowance with no ceiling; requires a `subscription_period` duration. */
+	grant_unlimited?: boolean;
 }
 
 // =============================================================================
@@ -821,6 +913,8 @@ export interface EntitlementOverrideRequest {
 export interface SubscriptionEntitlementSource {
 	entity_type: string;
 	entity_id: string;
+	/** Plan or addon name; an override carries the name of the entitlement it replaced. */
+	entity_name?: string;
 	entitlement_id: string;
 	usage_limit?: number | null;
 	static_value?: string;
@@ -832,6 +926,23 @@ export interface SubscriptionEntitlementEffective {
 	is_enabled?: boolean;
 	usage_limit?: number | null;
 	usage_reset_period?: string;
+	/**
+	 * Grant config summary for the whole feature — present regardless of whether a
+	 * window has opened, so the value column can show the promise. `usage_limit`
+	 * is meaningless when these are set.
+	 */
+	grant_measure?: ENTITLEMENT_GRANT_MEASURE;
+	grant_quota?: string | null;
+	grant_duration_value?: number | null;
+	grant_duration_unit?: ENTITLEMENT_GRANT_DURATION_UNIT;
+	/** Grant-based with no ceiling — distinct from "no grant config at all". */
+	grant_unlimited?: boolean;
+	/**
+	 * Runtime half of the grant config above: the windows this allowance has
+	 * materialized. Absent for legacy entitlements; `windows` is empty when no
+	 * window has opened yet.
+	 */
+	grant_state?: GrantState;
 	/** Aggregated static feature values (backend field name) */
 	static_values?: string[];
 	/** Present on EntitlementSource rows, not on aggregated entitlement */
@@ -859,6 +970,14 @@ export interface GetSubscriptionEntitlementsResponse {
 	subscription_id: string;
 	plan_id: string;
 	features: SubscriptionEntitlementFeature[];
+	/** Dollar allowances shared by every usage line; absent when the subscription has none. */
+	subscription_entitlement_grants?: SubscriptionEntitlementGrants;
+}
+
+/** The subscription's grants and the windows measured against them this period. */
+export interface SubscriptionEntitlementGrants {
+	entitlements: Entitlement[];
+	grant_state?: GrantState;
 }
 
 // =============================================================================

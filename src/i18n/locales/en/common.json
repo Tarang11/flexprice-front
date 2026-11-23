@@ -37,7 +37,8 @@
 		"linking": "Linking...",
 		"unlink": "Unlink",
 		"unlinking": "Unlinking...",
-		"rowActions": "Row actions"
+		"rowActions": "Row actions",
+		"modify": "Modify"
 	},
 	"status": {
 		"active": "Active",
@@ -380,6 +381,7 @@
 		"unknown": "Unknown",
 		"creditGrants": "Credit Grants",
 		"taxRateOverrides": "Tax Rate Overrides",
+		"taxExternalEngineNote": "Tax for this environment is calculated by {{provider}}, so overrides are not applied. Configure tax in {{provider}} instead.",
 		"taxes": "Taxes",
 		"yes": "Yes",
 		"no": "No",
@@ -441,6 +443,7 @@
 		"payments": "Payments",
 		"tabs": "Tabs",
 		"documentation": "Documentation",
+		"changePassword": "Change password",
 		"customerDetails": "Customer Details",
 		"loadingCustomerDetails": "Loading customer details...",
 		"timePeriod": "Time Period",
@@ -550,6 +553,7 @@
 		"breakdownTitle": "Usage Breakdown",
 		"feature": "Feature",
 		"totalUsage": "Total Usage",
+		"unitPrice": "Unit Price",
 		"totalCost": "Total Cost",
 		"noGroup": "No group",
 		"expandAllAria": "Expand all",
@@ -598,6 +602,12 @@
 		"placeholderCurrency": "Select currency",
 		"labelAutoApply": "Auto Apply",
 		"autoApplyHint": "Automatically apply this tax rate when applicable",
+		"labelTaxBehavior": "Tax Behavior",
+		"taxBehaviorHint": "Exclusive adds the tax on top of the price. Inclusive treats the price as already containing it.",
+		"taxBehaviorExclusive": "Exclusive",
+		"taxBehaviorExclusiveHint": "Added on top of the price",
+		"taxBehaviorInclusive": "Inclusive",
+		"taxBehaviorInclusiveHint": "Already included in the price",
 		"submitLink": "Link Tax Rate"
 	},
 	"subscriptionAddon": {
@@ -616,7 +626,7 @@
 		"edit": "Edit",
 		"noDescription": "No description",
 		"editAddonTitle": "Edit Addon",
-		"addAddonTitle": "Add Addon",
+		"addAddonTitle": "Add addons",
 		"labelAddon": "Addon",
 		"placeholderSelectAddon": "Select addon",
 		"addonChargesHeading": "Addon Charges",
@@ -626,11 +636,12 @@
 		"noChargesForPeriod": "No charges for this billing period/currency.",
 		"commitmentUsageOnlyHint": "Commitments can be configured only for usage-based charges.",
 		"saveChanges": "Save Changes",
-		"submitAddAddon": "Add Addon",
+		"submitAddAddon": "Add addons",
 		"chargeFallbackLabel": "Charge",
 		"columnPrice": "Price",
 		"labelStartDate": "Start Date (optional)",
-		"placeholderStartDate": "Select start date"
+		"placeholderStartDate": "Select start date",
+		"removedSuccess": "Addon removed successfully"
 	},
 	"priceTooltip": {
 		"volumeTierPricing": "Volume Tier Pricing",
@@ -671,7 +682,11 @@
 		"startTimePlaceholder": "Select start time",
 		"endTimeLabel": "End Time",
 		"endTimePlaceholder": "Select end time",
-		"runExport": "Run Export"
+		"runExport": "Run Export",
+		"customersLabel": "Customers",
+		"customersPlaceholder": "All customers",
+		"customersHint": "Leave empty to export every customer. Up to {{max}}.",
+		"customersTooMany": "Select at most {{max}} customers"
 	},
 	"taskRunsTable": {
 		"downloadStarted": "Download started",
@@ -809,5 +824,9 @@
 		"integrations": "Integrations",
 		"pricingWidget": "Pricing Widget",
 		"settings": "Settings"
+	},
+	"newUiBanner": {
+		"message": "A new Flexprice console is here.",
+		"action": "Take me to the new UI"
 	}
 }

@@ -19,6 +19,10 @@
 			"voidSuccess": "تم إبطال الفاتورة بنجاح",
 			"downloadError": "فشل تنزيل الفاتورة"
 		},
+		"hostedInvoice": {
+			"menuLabel": "عرض الفاتورة المستضافة",
+			"unavailable": "لا يتوفر رابط فاتورة مستضافة لهذه الفاتورة"
+		},
 		"edit": {
 			"pageTitle": "تعديل الفاتورة",
 			"detailsTitle": "تفاصيل الفاتورة",
@@ -144,7 +148,12 @@
 				"subtotal": "المجموع الفرعي",
 				"discount": "الخصم",
 				"prepaidCredits": "أرصدة مدفوعة مقدماً",
+				"taxBreakdownAria": "عرض تفاصيل الضريبة",
+				"netPayableAria": "كيف يتم احتساب صافي المبلغ المستحق",
 				"tax": "الضريبة",
+				"taxInclusiveTotal": "إجمالي الضريبة الشاملة المطبقة",
+				"taxExclusiveTotal": "إجمالي الضريبة المضافة المطبقة",
+				"taxTotal": "إجمالي الضريبة",
 				"netPayable": "صافي المستحق",
 				"netPayableTooltip": "المبلغ النهائي المستحق بعد تطبيق إشعارات الدائن",
 				"amountPaid": "المبلغ المدفوع",
@@ -241,6 +250,9 @@
 		"lineItemsToCredit": "البنود المراد دفعها كائتمان",
 		"creditAmount": "مبلغ الائتمان",
 		"totalAmountToCredit": "إجمالي المبلغ كائتمان",
+		"subtotalLabel": "المجموع الفرعي",
+		"taxLabel": "الضريبة",
+		"calculatingTax": "جارٍ حساب الضريبة",
 		"createCreditNoteCta": "إنشاء إشعار دائن",
 		"creating": "جارٍ الإنشاء…",
 		"createError": "فشل إنشاء الإشعار الدائن",
@@ -368,6 +380,7 @@
 			"removing": "جارٍ الإزالة…"
 		},
 		"changeQuantity": "تغيير الكمية",
+		"editCharge": "تعديل الرسم",
 		"reviewChanges": "مراجعة التغييرات",
 		"quantity": "الكمية",
 		"quantityPlaceholder": "مثلاً 10",
@@ -375,6 +388,9 @@
 		"selectDate": "اختر تاريخاً",
 		"quantityModify": {
 			"updatingDescription": "أنت تُحدّث الكمية لـ <highlight>{{name}}</highlight>.",
+			"updatingChargeDescription": "أنت تُحدّث <highlight>{{name}}</highlight>.",
+			"pricePerUnit": "السعر",
+			"pricePlaceholder": "مثلاً 20.00",
 			"effectiveDateHint": "يعتمد افتراضياً على بداية الفترة الحالية لرسوم المتأخرات، أو نهاية الفترة للرسوم المقدمة، لضمان سريان الرسم في هذه الفترة. امسح التاريخ للتطبيق فوراً.",
 			"preview": "معاينة",
 			"applyChanges": "تطبيق التغييرات"
@@ -383,9 +399,8 @@
 			"noData": "لا توجد بيانات معاينة.",
 			"columnType": "النوع",
 			"columnQty": "الكمية",
+			"columnPrice": "السعر",
 			"columnPeriod": "الفترة",
-			"directionIncrease": "زيادة",
-			"directionDecrease": "تخفيض",
 			"subscriptionUpdated": "سيتم تحديث <bold>الاشتراك</bold> ليعكس هذه التغييرات.",
 			"noExtraBillingDetails": "لم تُضمَّن تفاصيل فوترة إضافية في هذه المعاينة.",
 			"noBillingChanges": "لم تُرجَع تغييرات فوترة لهذه المعاينة."
@@ -419,7 +434,15 @@
 			},
 			"toast": {
 				"addonAddedSuccess": "تمت إضافة الإضافة بنجاح",
-				"addonAddFailed": "فشلت إضافة الإضافة"
+				"addonAddFailed": "فشلت إضافة الإضافة",
+				"addonsAddedSuccess_zero": "تمت إضافة الإضافات بنجاح",
+				"addonsAddedSuccess_one": "تمت إضافة الإضافة بنجاح",
+				"addonsAddedSuccess_two": "تمت إضافة إضافتين بنجاح",
+				"addonsAddedSuccess_few": "تمت إضافة {{count}} إضافات بنجاح",
+				"addonsAddedSuccess_many": "تمت إضافة {{count}} إضافة بنجاح",
+				"addonsAddedSuccess_other": "تمت إضافة {{count}} إضافة بنجاح",
+				"addonsUpdatedSuccess": "تم تحديث الإضافات بنجاح",
+				"addonsUpdateFailed": "فشل تحديث الإضافات"
 			},
 			"columns": {
 				"charge": "الرسم",
@@ -447,7 +470,45 @@
 				"none": "بدون تناسب",
 				"noneDescription": "لا تسويات تناسب."
 			},
-			"adding": "جارٍ الإضافة…"
+			"adding": "جارٍ الإضافة…",
+			"titleAdd": "إضافة إضافات",
+			"titleModify": "تعديل الإضافات",
+			"addAnotherAddon": "إضافة إضافة أخرى",
+			"chargesCount_zero": "لا توجد رسوم",
+			"chargesCount_one": "رسم واحد",
+			"chargesCount_two": "رسمان",
+			"chargesCount_few": "{{count}} رسوم",
+			"chargesCount_many": "{{count}} رسمًا",
+			"chargesCount_other": "{{count}} رسم",
+			"removeAddon": "إزالة {{name}}",
+			"maxAddonsReached": "يمكنك إضافة ما يصل إلى {{max}} إضافة في تغيير واحد.",
+			"changeAt": {
+				"label": "يبدأ",
+				"immediate": "الآن",
+				"immediateDescription": "إرفاق الإضافة فورًا.",
+				"endOfPeriod": "نهاية الفترة الحالية",
+				"endOfPeriodDescription": "إرفاق الإضافة عند انتهاء فترة الفوترة الحالية.",
+				"endOfPeriodDescriptionWithDate": "إرفاق الإضافة في {{date}}، عند انتهاء فترة الفوترة الحالية.",
+				"custom": "تاريخ مخصص",
+				"customDescription": "اختر تاريخ بدء الإضافة.",
+				"datePlaceholder": "اختر تاريخ البدء",
+				"dateRequired": "اختر تاريخ البدء"
+			},
+			"currentAddons": "الإضافات الحالية",
+			"addAddon": "إضافة إضافة",
+			"removing": "قيد الإزالة",
+			"undoRemoval": "تراجع",
+			"endAt": {
+				"label": "ينتهي",
+				"immediateDescription": "إزالة الإضافة فورًا.",
+				"endOfPeriodDescription": "إزالة الإضافة عند انتهاء فترة الفوترة الحالية.",
+				"endOfPeriodDescriptionWithDate": "إزالة الإضافة في {{date}}، عند انتهاء فترة الفوترة الحالية.",
+				"customDescription": "اختر تاريخ انتهاء الإضافة.",
+				"dateRequired": "اختر تاريخ الانتهاء",
+				"summaryNow": "ينتهي الآن",
+				"summaryPeriodEnd": "ينتهي في نهاية الفترة",
+				"summaryOn": "ينتهي في {{date}}"
+			}
 		},
 		"editDetailsHeader": {
 			"title": "تفاصيل الاشتراك",
@@ -548,6 +609,13 @@
 		"learnMore": "اعرف المزيد",
 		"recordedReceivedHint": "يمكنك اختيارياً تحديد تاريخ استلام الدفع الفعلي",
 		"paymentMethodUnavailable": "معالجة {{method}} غير متاحة بعد. استخدم الدفع غير المتصل أو الأرصدة.",
+		"savedMethod": "طريقة الدفع المحفوظة",
+		"selectSavedMethod": "اختر طريقة محفوظة",
+		"noChargeableMethod": "لا توجد طريقة محفوظة، استخدم رابط الدفع",
+		"loadingSavedMethods": "جارٍ تحميل الطرق المحفوظة…",
+		"chargeFailed": "فشلت عملية الخصم. راجع الدفع للتفاصيل.",
+		"chargeSavedCardRazorpayHint": "تتم تسوية مدفوعات Razorpay خلال 36 ساعة تقريباً، وفوق 15,000 روبية يجب أن يوافق العميل على الخصم من بنكه.",
+		"chargeSubmitted": "تم إرسال عملية الخصم. سيتم تحديث الدفع بعد تأكيد المزوّد.",
 		"amountPlaceholder": "0.00",
 		"recordPaymentButton": "تسجيل",
 		"amountDueInline": "المستحق: {{amount}}",
@@ -792,6 +860,9 @@
 			"creditsPlaceholder": "أرصدة",
 			"creditPreviewSuffix": " سيتم إضافتها إلى المحفظة",
 			"expiryDate": "تاريخ الانتهاء",
+			"effectiveDate": "تاريخ السريان",
+			"effectiveDatePlaceholder": "اختر تاريخاً",
+			"effectiveDateHint": "تتوفر الأرصدة للاستهلاك من هذا التاريخ. اتركه فارغاً لاستخدام الوقت الحالي.",
 			"priority": "الأولوية",
 			"priorityPlaceholder": "أدخل الأولوية",
 			"referenceId": "المعرّف المرجعي",
@@ -808,7 +879,18 @@
 			"typePurchasedDesc": "إضافة أرصدة تتطلب الدفع.",
 			"skipInvoice": "تخطي الفاتورة",
 			"generateInvoiceAction": "إنشاء فاتورة",
-			"checkoutLink": "رابط الدفع"
+			"checkoutLink": "رابط الدفع",
+			"unavailableWithCouponHint": "غير متاح مع قسيمة"
+		},
+		"pendingCheckout": {
+			"title": "توجد عملية دفع معلّقة لهذه المحفظة",
+			"description": "لم يتم إنشاء أي شيء لعملية الشحن هذه. لدى العميل عملية دفع غير مكتملة على هذه المحفظة، ويجب إتمامها أو إلغاؤها قبل بدء عملية أخرى.",
+			"sessionId": "الجلسة المعلّقة",
+			"expiresAt": "تنتهي في",
+			"link": "الرابط",
+			"openExisting": "فتح الدفع المعلّق",
+			"cancelAndRetry": "إلغاؤها وبدء عملية دفع جديدة",
+			"cancelHint": "الإلغاء يُبطل رابط الدفع المعلّق. إذا كان العميل يدفع الآن، فقد يتم استلام الدفعة رغم ذلك — تحقق من المحفظة قبل إنشاء عملية أخرى."
 		},
 		"debit": {
 			"title": "خصم يدوي",

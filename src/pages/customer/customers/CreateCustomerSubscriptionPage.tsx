@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useLocation } from 'react-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import FxRateApi from '@/api/FxRateApi';
+import { canSetSubscriptionFxRates, resolveBillingCurrency, toInlineFxRates } from '@/utils/fx/subscriptionFx';
 
 import { Button, SelectOption } from '@/components/atoms';
 import { ApiDocsContent } from '@/components/molecules';
@@ -14,6 +16,7 @@ import { AddonApi, CustomerApi, PlanApi, SubscriptionApi, TaxApi, CouponApi } fr
 import { refetchQueries } from '@/core/services/tanstack/ReactQueryProvider';
 import { RouteNames } from '@/core/routes/Routes';
 
+import type { SubscriptionEntitlementGrantDraft } from '@/types/dto/Entitlement';
 import {
 	SubscriptionPhase,
 	Coupon,
@@ -41,7 +44,7 @@ import {
 	SubscriptionInheritanceConfig,
 } from '@/types/dto';
 import { FilterOperator, DataType } from '@/types/common/QueryBuilder';
-import { OverrideLineItemRequest, SubscriptionPhaseCreateRequest } from '@/types/dto/Subscription';
+import { OverrideLineItemRequest, SubscriptionFxRateRow, SubscriptionPhaseCreateRequest } from '@/types/dto/Subscription';
 import type { AddedSubscriptionLineItem } from '@/components/organisms/Subscription/AddSubscriptionChargeDialog';
 
 import { cn } from '@/lib/utils';
@@ -122,6 +125,7 @@ export type SubscriptionFormState = {
 	tax_rate_overrides: TaxRateOverride[];
 	entitlementOverrides: Record<string, EntitlementOverrideRequest>;
 	creditGrants: InternalCreditGrantRequest[];
+	subscriptionEntitlementGrants: SubscriptionEntitlementGrantDraft[];
 	enable_true_up: boolean;
 	commitmentDuration: string;
 	/** Billing customer (serialized as inheritance.invoicing_customer_external_id on create) */
@@ -153,6 +157,8 @@ export type SubscriptionFormState = {
 	 * Only offered when at least one attached charge actually splits; presentation only.
 	 */
 	combineLineItemsPerBillingPeriod: boolean;
+	/** Subscription FX overrides; sent as `fx_rates` only while the FX Overrides table is visible. */
+	fxRates: SubscriptionFxRateRow[];
 };
 
 const usePlans = () => {
@@ -289,6 +295,7 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 						currency: item.currency.toLowerCase(),
 						auto_apply: item.auto_apply,
 						priority: item.priority,
+						tax_behavior: item.tax_behavior,
 						tax_rate_name: item.tax_rate?.name ?? '',
 					})),
 			}));
@@ -320,6 +327,7 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 		tax_rate_overrides: [],
 		entitlementOverrides: {},
 		creditGrants: [],
+		subscriptionEntitlementGrants: [],
 		enable_true_up: false,
 		commitmentDuration: BILLING_PERIOD.MONTHLY.toUpperCase(),
 		invoicingCustomer: undefined,
@@ -332,11 +340,31 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 		autoInvoiceThreshold: '',
 		optedInAdditionalCadences: [],
 		combineLineItemsPerBillingPeriod: false,
+		fxRates: [],
 	});
 
 	const { data: plans, isLoading: plansLoading, isError: plansError } = usePlans();
 	const { data: customerData } = useCustomerData(effectiveCustomerId);
 	const { data: subscriptionData } = useSubscriptionData(subscription_id);
+
+	const { data: subscriptionFxRates } = useQuery({
+		queryKey: ['subscription-fx-rates', subscription_id],
+		queryFn: () => FxRateApi.queryFxRates({ scope: 'subscription', scope_id: subscription_id!, limit: 100, offset: 0 }),
+		enabled: !!subscription_id,
+	});
+
+	useEffect(() => {
+		if (!subscriptionFxRates) return;
+		setSubscriptionState((prev) => ({
+			...prev,
+			fxRates: subscriptionFxRates.items.map((rate) => ({
+				id: rate.id,
+				rate: rate.rate,
+				...(rate.start_date ? { start_date: rate.start_date } : {}),
+				...(rate.end_date ? { end_date: rate.end_date } : {}),
+			})),
+		}));
+	}, [subscriptionFxRates]);
 	const {
 		data: planDetails,
 		prices,
@@ -417,6 +445,7 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 				tax_rate_overrides: [],
 				entitlementOverrides: {},
 				creditGrants: (subscriptionData.details.credit_grants || []).map(creditGrantToInternal),
+				subscriptionEntitlementGrants: [],
 				enable_true_up: (subscriptionData.details as any).enable_true_up ?? false,
 				inheritanceCustomers: [],
 				...(() => {
@@ -785,6 +814,12 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 
 		// Sanitize subscription data
 		const sanitized = sanitizeSubscriptionData();
+		const billingCurrency = resolveBillingCurrency(sanitized.currency, [
+			subscriptionState.invoicingCustomer,
+			selectedCustomer,
+			customerData,
+		]);
+		const fxRates = toInlineFxRates(subscriptionState.fxRates, canSetSubscriptionFxRates(sanitized.currency, billingCurrency));
 
 		const { invoicingCustomer, customerId: formCustomerId } = subscriptionState;
 
@@ -850,6 +885,8 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 						sanitized.creditGrants.length > 0
 						? sanitized.creditGrants.map(internalToCreateRequest)
 						: undefined,
+			subscription_entitlement_grants:
+				subscriptionState.subscriptionEntitlementGrants.length > 0 ? subscriptionState.subscriptionEntitlementGrants : undefined,
 			enable_true_up: subscriptionState.enable_true_up,
 			commitment_duration: sanitized.commitmentDuration ? (sanitized.commitmentDuration as BILLING_PERIOD) : undefined,
 			subscription_status: isDraftParam ? SUBSCRIPTION_STATUS.DRAFT : undefined,
@@ -870,6 +907,7 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 			...(sanitized.auto_invoice_threshold !== undefined ? { auto_invoice_threshold: sanitized.auto_invoice_threshold } : {}),
 			...(sanitized.finalIncludePriceIds !== undefined ? { include_price_ids: sanitized.finalIncludePriceIds } : {}),
 			...(sanitized.finalLineItemGrouping !== undefined ? { line_item_grouping: sanitized.finalLineItemGrouping } : {}),
+			...(fxRates ? { fx_rates: fxRates } : {}),
 		};
 
 		setIsDraft(isDraftParam);

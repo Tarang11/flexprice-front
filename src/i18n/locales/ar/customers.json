@@ -68,9 +68,13 @@
 			"state": "المحافظة",
 			"city": "المدينة",
 			"postalCode": "الرمز البريدي",
+			"taxTreatment": "المعاملة الضريبية",
+			"taxTreatmentExempt": "معفى",
+			"taxTreatmentTaxable": "خاضع للضريبة",
 			"timezone": "المنطقة الزمنية",
 			"subscriptionAmount": "مبلغ الاشتراك",
-			"subscriptionStartDate": "تاريخ بدء الاشتراك"
+			"subscriptionStartDate": "تاريخ بدء الاشتراك",
+			"billingCurrency": "عملة الفوترة"
 		},
 		"customerCardSectionTitle": "تفاصيل العميل",
 		"customerCardSlug": "المعرّف",
@@ -109,7 +113,10 @@
 			"selectCity": "اختر المدينة",
 			"noCities": "لا توجد مدن متاحة",
 			"postalCode": "الرمز البريدي",
-			"postalCodePlaceholder": "أدخل الرمز البريدي"
+			"postalCodePlaceholder": "أدخل الرمز البريدي",
+			"billingCurrency": "عملة الفوترة",
+			"billingCurrencyNone": "لا شيء (الفوترة بعملة الخطة)",
+			"billingCurrencyHint": "تُحوَّل فواتير الاشتراكات بعملة أخرى إلى هذه العملة عند إصدارها. لا تتغير الفواتير الصادرة."
 		},
 		"validation": {
 			"externalIdRequired": "المعرّف الخارجي مطلوب",
@@ -187,9 +194,11 @@
 	"usageTable": {
 		"columns": {
 			"feature": "الميزة",
-			"plan": "الخطة",
+			"source": "المصدر",
 			"value": "القيمة",
-			"usage": "الاستخدام"
+			"mode": "الوضع",
+			"usage": "الاستخدام",
+			"measure": "Measure"
 		},
 		"units": "وحدات",
 		"unlimitedLabel": "غير محدود",
@@ -203,7 +212,27 @@
 			"dash": "—",
 			"usageProgressUnlimited": "{{usage}} / غير محدود"
 		},
-		"fallback": "--"
+		"fallback": "--",
+		"grantsTitle": "المنح",
+		"grantsTitleHint": "نافذة سماح واحدة. تُقاس وتُفوتر كل نافذة على حدة.",
+		"grantsColumnStart": "البداية",
+		"grantsColumnEnd": "النهاية",
+		"grantsColumnStatus": "الحالة",
+		"grantsColumnUsage": "الاستخدام",
+		"grantState": {
+			"scheduled": "مجدولة",
+			"active": "نشطة",
+			"exhausted": "مستنفدة",
+			"closed": "مغلقة"
+		},
+		"grantDetailAllowance": "السماح",
+		"grantDetailMeasure": "المقياس",
+		"grantDetailSource": "المصدر",
+		"windowOverage": "over by {{amount}}",
+		"measureAmount": "Amount",
+		"measureQuantity": "Quantity",
+		"modeParallel": "متوازٍ",
+		"modeAdditive": "تراكمي"
 	},
 	"subscriptionCreate": {
 		"selectCustomerLabel": "العميل",
@@ -312,7 +341,35 @@
 			"saveCardOnStripe": "حفظ البطاقة على Stripe",
 			"setupAutopayMoyasar": "إعداد الدفع التلقائي (Moyasar)",
 			"sharePortalLinkTitle": "مشاركة رابط بوابة العميل",
-			"childCustomersTitle": "العملاء الفرعيون"
+			"childCustomersTitle": "العملاء الفرعيون",
+			"fxOverrides": {
+				"title": "تجاوزات سعر الصرف",
+				"add": "إضافة تجاوز",
+				"empty": "لا توجد تجاوزات لسعر الصرف. يستخدم هذا العميل أسعار الصرف العامة.",
+				"loadError": "تعذر تحميل تجاوزات سعر الصرف.",
+				"paginationUnit": "تجاوزات",
+				"writeDeniedTooltip": "ليست لديك صلاحية لإدارة تجاوزات سعر الصرف. اطلب الوصول من مسؤول المستأجر.",
+				"columns": {
+					"rate": "السعر",
+					"validFrom": "صالح من",
+					"validUntil": "صالح حتى",
+					"status": "الحالة"
+				},
+				"always": "دائمًا",
+				"noEnd": "بلا نهاية",
+				"status": {
+					"active": "نشط",
+					"scheduled": "مجدول",
+					"expired": "منتهي"
+				},
+				"entityName": "تجاوز سعر الصرف",
+				"delete": "حذف",
+				"toast": {
+					"created": "تمت إضافة تجاوز سعر الصرف",
+					"updated": "تم تحديث تجاوز سعر الصرف",
+					"deleted": "تم حذف تجاوز سعر الصرف"
+				}
+			}
 		},
 		"invoice": {
 			"title": "الفواتير",
@@ -328,6 +385,7 @@
 		},
 		"tax": {
 			"writeDeniedTooltip": "ليس لديك صلاحية إدارة ارتباطات الضرائب. اطلب الوصول من مسؤول المستأجر.",
+			"externalEngineTooltip": "تُحسب الضريبة لهذه البيئة بواسطة {{provider}}. قم بإعداد أسعار الضرائب والتسجيلات في {{provider}} بدلاً من ذلك.",
 			"emptyTitle": "الضريبة",
 			"emptySubtitle": "لا يوجد معدل ضريبي مُعيَّن لهذا العميل",
 			"associationsTitle": "ارتباطات الضرائب",
@@ -381,6 +439,10 @@
 			"creditGrantDeleted": "تم حذف منحة الائتمان بنجاح",
 			"creditGrantDeleteFailed": "فشل في حذف منحة الائتمان",
 			"loadError": "خطأ في تحميل بيانات الاشتراك"
+		},
+		"fxOverrides": {
+			"empty": "لا توجد تجاوزات لسعر الصرف. تستخدم الفواتير تجاوز العميل أو السعر العام.",
+			"hint": "تنطبق التغييرات على الفواتير الصادرة من الآن فصاعدًا. لا تتغير الفواتير الصادرة."
 		}
 	},
 	"moyasarAutopay": {
@@ -462,7 +524,24 @@
 			"activateSubtitle": "سيُبدأ تفعيل الاشتراك دورة الفوترة من تاريخ البدء المختار.",
 			"startDate": "تاريخ البدء",
 			"activating": "جارٍ التفعيل…",
-			"activate": "تفعيل"
+			"activate": "تفعيل",
+			"pauseSubscription": "إيقاف الاشتراك مؤقتاً",
+			"resumeSubscription": "استئناف الاشتراك",
+			"pauseTitle": "إيقاف الاشتراك مؤقتاً",
+			"pauseSubtitle": "يُفوتر الاستخدام والرسوم الثابتة حتى الآن في فاتورة إغلاق.",
+			"pauseMode": "وضع الإيقاف",
+			"pauseImmediate": "فوري",
+			"pauseReasonPlaceholder": "لماذا يُوقف هذا الاشتراك مؤقتاً؟",
+			"yesPause": "نعم، إيقاف",
+			"pausing": "جارٍ الإيقاف…",
+			"pauseSuccess": "تم إيقاف الاشتراك مؤقتاً بنجاح",
+			"pauseError": "تعذّر إيقاف الاشتراك",
+			"resumeTitle": "استئناف الاشتراك",
+			"resumeSubtitle": "تُستأنف الفوترة الآن. تُفوتر الرسوم المسبقة للفترة الحالية عند الاستئناف.",
+			"yesResume": "نعم، استئناف",
+			"resuming": "جارٍ الاستئناف…",
+			"resumeSuccess": "تم استئناف الاشتراك بنجاح",
+			"resumeError": "تعذّر استئناف الاشتراك"
 		},
 		"subscriptionForm": {
 			"subscriptionDetails": "تفاصيل الاشتراك",
@@ -473,7 +552,7 @@
 			"loadingPlanDetails": "جارٍ تحميل تفاصيل الخطة…",
 			"billingPeriodRequired": "فترة الفوترة*",
 			"selectBillingPeriod": "اختر فترة الفوترة",
-			"currencyRequired": "العملة*",
+			"currencyRequired": "عملة التسعير*",
 			"selectCurrency": "اختر العملة",
 			"subscriptionCycle": "دورة الاشتراك",
 			"billingAnniversary": "ذكرى الفوترة",
@@ -517,7 +596,24 @@
 			"autoInvoicePlaceholder": "100.00",
 			"autoInvoiceAmountAria": "مبلغ حد الفاتورة التلقائية",
 			"planNoCharges": "لا توجد رسوم مضافة إلى هذه الخطة",
-			"addedChargesLostOnPhaseConversion": "الرسوم المضافة غير مدعومة في الاشتراكات المرحلية وتمت إزالتها. أضفها مرة أخرى ضمن مرحلة، أو بعد إنشاء الاشتراك."
+			"addedChargesLostOnPhaseConversion": "الرسوم المضافة غير مدعومة في الاشتراكات المرحلية وتمت إزالتها. أضفها مرة أخرى ضمن مرحلة، أو بعد إنشاء الاشتراك.",
+			"billingCurrency": "عملة الفوترة",
+			"billingCurrencyHint": "تُصدر الفواتير بعملة {{billing}}، محوّلة من {{charge}} عند إصدارها.",
+			"fxOverrides": {
+				"title": "تجاوزات سعر الصرف",
+				"hintWithRate": "تنطبق الصفوف بلا تواريخ على كل فاتورة. اترك الجدول فارغًا لاستخدام تجاوز العميل أو السعر العام ({{rate}}).",
+				"hintCheckout": "عند الدفع المسبق، يُستخدم الصف الذي يغطي اليوم.",
+				"noGlobalRate": "لا يوجد سعر عام لـ {{pair}}. أضف سعرًا في الإعدادات › الفوترة قبل إنشاء هذا الاشتراك.",
+				"entityName": "تجاوز سعر الصرف",
+				"remove": "إزالة",
+				"columns": {
+					"rate": "السعر",
+					"validFrom": "صالح من",
+					"validUntil": "صالح حتى"
+				},
+				"always": "دائمًا",
+				"noEnd": "بلا نهاية"
+			}
 		},
 		"subscriptionPriceTable": {
 			"overridePrice": "تجاوز السعر",

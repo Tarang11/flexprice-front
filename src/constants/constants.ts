@@ -136,6 +136,10 @@ export const priceBucketSizeOptions = [
 	{ label: 'Day', value: BUCKET_SIZE.WindowSizeDay },
 ];
 
+// For dialogs that edit an existing price: "None" is the only way to remove bucketing, since the
+// select can't be emptied once a size is picked. Not for create flows, where BUCKET_SIZE_NONE is invalid.
+export const priceBucketSizeOptionsWithNone = [{ label: 'None', value: BUCKET_SIZE_NONE }, ...priceBucketSizeOptions];
+
 export const billingCadenceOptions = [
 	{ label: 'Recurring', value: BILLING_CADENCE.RECURRING },
 	{ label: 'One Time', value: BILLING_CADENCE.ONETIME },
@@ -161,6 +165,7 @@ export const invoiceCadenceOptions = [
 // Subscription-related options
 export const subscriptionStatusOptions = [
 	{ label: 'Active', value: SUBSCRIPTION_STATUS.ACTIVE },
+	{ label: 'Paused', value: SUBSCRIPTION_STATUS.PAUSED },
 	{ label: 'Cancelled', value: SUBSCRIPTION_STATUS.CANCELLED },
 	{ label: 'Incomplete', value: SUBSCRIPTION_STATUS.INCOMPLETE },
 	{ label: 'Trialing', value: SUBSCRIPTION_STATUS.TRIALING },
@@ -194,6 +199,8 @@ export const paymentTermsOptions = [
 	{ label: 'NET 60', value: PAYMENT_TERMS.NET_60 },
 	{ label: 'NET 75', value: PAYMENT_TERMS.NET_75 },
 	{ label: 'NET 90', value: PAYMENT_TERMS.NET_90 },
+	{ label: 'End of month', value: PAYMENT_TERMS.END_OF_MONTH },
+	{ label: 'End of next month', value: PAYMENT_TERMS.END_OF_NEXT_MONTH },
 ];
 
 export const prorationBehaviorOptions = [

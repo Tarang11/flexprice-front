@@ -1,4 +1,12 @@
 export type {
+	EntityCreationStatus,
+	EntityCreationResult,
+	OnExistingEntityPolicy,
+	EntityCreationConflictPolicies,
+	EntityCreationOptions,
+} from './EntityCreation';
+
+export type {
 	CreateAlertSettingsRequest,
 	UpdateAlertSettingsRequest,
 	AlertSettingResponse,
@@ -28,6 +36,7 @@ export type {
 	GetEventsRequest,
 	GetEventsResponse,
 	GetEventDebugResponse,
+	EventLookupItem,
 	EventProcessedEvent,
 	EventDebugStatus,
 	DebugTrackerStatus,
@@ -117,6 +126,9 @@ export type {
 	GetCustomerUsageSummaryRequest,
 	DashboardAnalyticsRequest,
 	DashboardCostAnalyticsRequest,
+	PortalPropertyKeysRequest,
+	PortalPropertyValuesRequest,
+	PropertyValuesResponse,
 } from './Dashboard';
 
 export type {
@@ -167,6 +179,8 @@ export type {
 	MeterResponse,
 	GetAllMetersResponse,
 	ListMetersResponse,
+	GetPropertyKeysRequest,
+	PropertyKeysResponse,
 } from './Meter';
 
 export type { GetAllPaymentsPayload, GetAllPaymentsResponse, RecordPaymentPayload } from './Payment';
@@ -188,8 +202,8 @@ export type {
 	SubscriptionEntitlementSource,
 	SubscriptionPriceCreateRequest,
 	SubModifyInheritanceRequest,
-	LineItemQuantityChange,
-	SubModifyQuantityChangeRequest,
+	LineItemChange,
+	SubModifyLineItemChangeRequest,
 	SubModifyGroupedInvoicingParams,
 	ExecuteSubscriptionModifyRequest,
 	ChangedLineItem,
@@ -240,6 +254,8 @@ export type {
 export type {
 	GetAllCreditNotesPayload,
 	CreateCreditNoteParams,
+	PreviewCreditNoteParams,
+	CreditNotePreviewResponse,
 	CreateCreditNoteLineItemRequest,
 	ProcessDraftCreditNoteParams,
 	VoidCreditNoteParams,
@@ -281,6 +297,7 @@ export type {
 	GetAddonByFilterPayload,
 	AddAddonToSubscriptionRequest,
 	AddonResponse,
+	SynchronizeAddonPricesWithSubscriptionResponse,
 } from './Addon';
 
 export type {
@@ -421,3 +438,4 @@ export type {
 	PortalPayInvoiceRequest,
 	PortalPayInvoiceResponse,
 } from './CustomerPortalBilling';
+export type { CreateFxRateRequest, UpdateFxRateRequest, FxRateFilter, ListFxRatesResponse } from './FxRate';

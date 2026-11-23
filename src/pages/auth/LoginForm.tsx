@@ -12,6 +12,8 @@ import { RouteNames } from '@/core/routes/Routes';
 import GoogleSignin from './GoogleSignin';
 import SamlSignin, { SSO_TENANT_PARAM, resolveSsoTenantId } from './SamlSignin';
 import { AuthTab } from './authTabs';
+import { sanitizeRedirect } from './safeRedirect';
+import { stripCredentialParams } from './credentialParams';
 import { useTranslation } from 'react-i18next';
 
 interface LoginFormProps {
@@ -32,25 +34,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchTab }) => {
 	// disappear mid-visit.
 	const ssoTenantId = resolveSsoTenantId(searchParams.get(SSO_TENANT_PARAM), import.meta.env.VITE_SSO_TENANT_ID as string | undefined);
 
-	// Prefill from query params (e.g. shared login link); then strip params from URL
+	// Credentials are never read from the URL. This only scrubs them.
+	//
+	// The login page used to prefill itself from email and password query
+	// parameters, which is
+	// what made the removed "login link" work. Links already sent cannot be
+	// recalled, so one can still arrive — it now signs nobody in, and the
+	// password is replaced out of the address bar so it stops being carried in
+	// `Referer` headers and left behind in history. See credentialParams.ts.
 	useEffect(() => {
-		const emailParam = searchParams.get('email');
-		const passwordParam = searchParams.get('password');
-		if (!emailParam?.trim() || !passwordParam?.trim()) return;
-		try {
-			const decodedEmail = decodeURIComponent(emailParam.trim());
-			const decodedPassword = decodeURIComponent(passwordParam.trim());
-			if (decodedEmail && decodedPassword) {
-				setEmail(decodedEmail);
-				setPassword(decodedPassword);
-				const next = new URLSearchParams(searchParams);
-				next.delete('email');
-				next.delete('password');
-				setSearchParams(next, { replace: true });
-			}
-		} catch {
-			// ignore malformed params
-		}
+		const cleaned = stripCredentialParams(searchParams.toString());
+		if (cleaned === null) return;
+		setSearchParams(new URLSearchParams(cleaned), { replace: true });
 	}, [searchParams, setSearchParams]);
 
 	const { mutate: localLogin } = useMutation({
@@ -96,7 +91,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchTab }) => {
 				}
 
 				userContext.setUser(authData.user);
-				navigate('/');
+				// A page that needs a session sends the user here with the way back.
+				navigate(sanitizeRedirect(searchParams.get('redirect')) ?? '/');
 				toast.success('Login successful');
 			} catch (error) {
 				// Belt-and-suspenders: a thrown error here (e.g. a misconfigured auth client)
@@ -130,9 +126,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchTab }) => {
 						<label htmlFor='password' className='block text-sm font-medium text-content-secondary'>
 							{t('fields.password')}
 						</label>
-						<button type='button' onClick={() => switchTab(AuthTab.FORGOT_PASSWORD)} className='text-sm text-grey-600 hover:underline'>
-							{t('links.forgotPassword')}
-						</button>
+						{/* Self-hosted has no email, so only an admin can start a reset. */}
+						{config.app.env !== APP_ENV.SelfHosted && (
+							<button type='button' onClick={() => switchTab(AuthTab.FORGOT_PASSWORD)} className='text-sm text-grey-600 hover:underline'>
+								{t('links.forgotPassword')}
+							</button>
+						)}
 					</div>
 					<Input
 						id='password'
@@ -149,6 +148,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ switchTab }) => {
 						onChange={(s) => setPassword(s)}
 						value={password}
 					/>
+					{config.app.env === APP_ENV.SelfHosted && <p className='mt-1.5 text-xs text-content-muted'>{t('links.askAdmin')}</p>}
 				</div>
 				<Button onClick={handleLogin} className='w-full !mt-6 h-11' isLoading={loading}>
 					{t('buttons.login')}

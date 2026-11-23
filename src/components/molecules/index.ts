@@ -6,6 +6,7 @@
 export { Sidebar } from './Sidebar';
 export { default as BreadCrumbs } from './BreadCrumbs';
 export { default as RestrictedEnvBanner } from './RestrictedEnvBanner';
+export { default as NewUiBanner } from './NewUiBanner';
 export { default as ContactUsDialog } from './ContactUsDialog';
 export { default as Pagination } from './Pagination';
 
@@ -86,6 +87,7 @@ export { default as RecordPaymentTopup } from './RecordPaymentTopup';
 // Wallet Management
 export { default as WalletTransactionsTable, AllWalletTransactionsTable } from './Wallet';
 export { default as TopupCard } from './WalletTopupCard';
+export { default as PendingCheckoutSessionDialog } from './PendingCheckoutSessionDialog';
 export { default as DebitCard } from './WalletDebitCard';
 export { default as WalletAlertDialog } from './WalletAlertDialog';
 export { default as AlertSettingsDialog } from './AlertSettingsDialog';
@@ -141,6 +143,7 @@ export { default as GroupDrawer } from './GroupDrawer';
 
 // Events & Analytics
 export { default as EventsTable } from './Events';
+export { EventsLoadError } from './Events';
 export { default as EventFilter } from './EventFilter';
 export type { EventFilterData } from './EventFilter';
 

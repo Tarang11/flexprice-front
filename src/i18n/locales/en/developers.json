@@ -45,6 +45,7 @@
 		"timestamp": "Timestamp",
 		"response": "Response",
 		"eventDetails": "Event Details",
+		"ingestedAt": "Ingested at",
 		"eventFilter": "Event Filter",
 		"roleRequiredHint": "Roles",
 		"placeholders": {
@@ -243,7 +244,11 @@
 				"customHeaders": "Custom Headers",
 				"headerKeyPlaceholder": "Key",
 				"headerValuePlaceholder": "Value",
-				"headersSaveFailed": "Failed to update custom headers"
+				"headersSaveFailed": "Failed to update custom headers",
+				"headerValueHidden": "Value hidden",
+				"headerValueHiddenHint": "This header is treated as sensitive, so its value is never returned. Re-enter the key above with a new value to replace it.",
+				"addHeader": "Add header",
+				"removeHeader": "Remove header {{key}}"
 			},
 			"testing": {
 				"heading": "Example Webhook",
@@ -419,10 +424,13 @@
 			"noTrackerData": "No tracker data available for this event.",
 			"couldNotResolveCustomer": "Could not resolve customer for this subscription",
 			"openSubscriptionFailed": "Failed to open subscription",
-			"propertiesCopied": "Properties copied to clipboard!"
+			"propertiesCopied": "Properties copied to clipboard!",
+			"ingestedVersionsTitle": "Ingested versions",
+			"ingestedVersionNumber": "Version {{n}}",
+			"duplicateEventIdHint": "This event id was ingested more than once. Stored meter usage is from the first processed ingest, not necessarily the latest version."
 		},
 		"processed": {
-			"eventNumber": "Event #{{n}}"
+			"eventNumber": "Processed usage #{{n}}"
 		},
 		"tracker": {
 			"ingested": "Ingested",
@@ -447,7 +455,11 @@
 			"viewLatestData": "View latest data"
 		},
 		"list": {
-			"noEventsFound": "No events found"
+			"noEventsFound": "No events found",
+			"loadFailedTitle": "Couldn't load more events",
+			"rateLimitedTitle": "Too many requests",
+			"rateLimitedDescription": "The events API is rate limiting this request. Loading will resume automatically in a few seconds.",
+			"retry": "Retry"
 		}
 	},
 	"usage": {

@@ -11,6 +11,7 @@ import {
 	PortalTableHeader as TableHeader,
 	PortalTableRow as TableRow,
 } from '@/components/atoms/PortalTable/PortalTable';
+import { formatAmount } from '@/components/atoms/Input/Input';
 import { formatNumber, getCurrencySymbol } from '@/utils';
 import { cn } from '@/lib/utils';
 import EmptyState from '@/components/atoms/EmptyState/EmptyState';
@@ -46,6 +47,18 @@ function renderUsageCell(row: UsageBreakdownRow) {
 	);
 }
 
+function renderUnitPriceCell(row: UsageBreakdownRow) {
+	if (!row.unitPrice) return '-';
+	const formatted = formatAmount(row.unitPrice);
+	if (!formatted) return '-';
+	return (
+		<span>
+			{row.currency ? getCurrencySymbol(row.currency) : ''}
+			{formatted}
+		</span>
+	);
+}
+
 function renderCostCell(row: UsageBreakdownRow) {
 	if (row.totalCost === 0 || !row.currency) return '-';
 	return (
@@ -60,7 +73,15 @@ function renderCostCell(row: UsageBreakdownRow) {
  * Prop-only usage-breakdown table — no fetching, no auth, no PortalConfigContext. Groups rows by
  * `groupId`/`groupName` (falls back to an "ungrouped" bucket) and supports sorting by usage/cost.
  */
-const UsageBreakdown = ({ rows: rawRows, label, isLoading = false, className, emptyAction }: UsageBreakdownProps) => {
+const UsageBreakdown = ({
+	rows: rawRows,
+	label,
+	nameLabel,
+	showUsage = true,
+	isLoading = false,
+	className,
+	emptyAction,
+}: UsageBreakdownProps) => {
 	const rows = useMemo(() => normalizeUsageBreakdownRows(rawRows), [rawRows]);
 	const t = useUsageT();
 
@@ -198,11 +219,12 @@ const UsageBreakdown = ({ rows: rawRows, label, isLoading = false, className, em
 			    a bordered table inside it read as a different component from the portal's
 			    other two tables. */}
 			<div>
-				<Table>
-					<TableHeader>
+				<Table containerClassName='max-h-[28rem] overflow-y-auto'>
+					<TableHeader className='sticky top-0 z-10'>
 						<TableRow>
-							<TableHead className='w-[45%]'>{t('usageWidgets.feature')}</TableHead>
-							<TableHead align='end'>{renderSortableHeader(SORT_TOTAL_USAGE, t('usageWidgets.totalUsage'))}</TableHead>
+							<TableHead className='w-[45%]'>{nameLabel || t('usageWidgets.feature')}</TableHead>
+							{showUsage && <TableHead align='end'>{renderSortableHeader(SORT_TOTAL_USAGE, t('usageWidgets.totalUsage'))}</TableHead>}
+							<TableHead align='end'>{t('usageWidgets.unitPrice')}</TableHead>
 							<TableHead align='end'>{renderSortableHeader(SORT_TOTAL_COST, t('usageWidgets.totalCost'))}</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -242,6 +264,11 @@ const UsageBreakdown = ({ rows: rawRows, label, isLoading = false, className, em
 													))}
 											</div>
 										</TableCell>
+										{showUsage && (
+											<TableCell align='end' className='text-content-secondary'>
+												{t('usageWidgets.cellEmDash')}
+											</TableCell>
+										)}
 										<TableCell align='end' className='text-content-secondary'>
 											{t('usageWidgets.cellEmDash')}
 										</TableCell>
@@ -260,8 +287,13 @@ const UsageBreakdown = ({ rows: rawRows, label, isLoading = false, className, em
 										bucket.items.map((row, childIndex) => (
 											<TableRow key={`${bucket.groupKey}:${row.id}:${childIndex}`}>
 												<TableCell className='ps-8'>{row.name || t('usageWidgets.unknownRow')}</TableCell>
+												{showUsage && (
+													<TableCell align='end' className='text-content-secondary'>
+														{renderUsageCell(row)}
+													</TableCell>
+												)}
 												<TableCell align='end' className='text-content-secondary'>
-													{renderUsageCell(row)}
+													{renderUnitPriceCell(row)}
 												</TableCell>
 												<TableCell align='end' className='text-content-secondary'>
 													{renderCostCell(row)}
@@ -273,9 +305,16 @@ const UsageBreakdown = ({ rows: rawRows, label, isLoading = false, className, em
 						})}
 						{ungroupedItems.map((row, index) => (
 							<TableRow key={`ungrouped:${row.id}:${index}`}>
-								<TableCell>{row.name || t('usageWidgets.unknownRow')}</TableCell>
+								<TableCell className='max-w-0 truncate' title={row.name}>
+									{row.name || t('usageWidgets.unknownRow')}
+								</TableCell>
+								{showUsage && (
+									<TableCell align='end' className='text-content-secondary'>
+										{renderUsageCell(row)}
+									</TableCell>
+								)}
 								<TableCell align='end' className='text-content-secondary'>
-									{renderUsageCell(row)}
+									{renderUnitPriceCell(row)}
 								</TableCell>
 								<TableCell align='end' className='text-content-secondary'>
 									{renderCostCell(row)}
@@ -284,7 +323,7 @@ const UsageBreakdown = ({ rows: rawRows, label, isLoading = false, className, em
 						))}
 						{rows.length === 0 && (
 							<TableRow>
-								<TableCell colSpan={3} className='text-content-secondary'>
+								<TableCell colSpan={showUsage ? 4 : 3} className='text-content-secondary'>
 									{t('usageWidgets.cellEmpty')}
 								</TableCell>
 							</TableRow>

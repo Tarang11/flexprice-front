@@ -2,7 +2,11 @@
 	"wrapper": {
 		"invalidLinkTitle": "Invalid Customer Portal Link",
 		"invalidLinkDescription": "Dashboard session token is missing from the URL. Please check your link and try again.",
-		"refreshPage": "Refresh Page"
+		"refreshPage": "Refresh Page",
+		"checkoutReturnTitle": "We're confirming your payment",
+		"checkoutReturnDescription": "We check every payment with the payment provider before applying it. Once it's confirmed, it appears on your billing page. This usually takes a few minutes, and you don't need to do anything else. You can close this page.",
+		"checkoutReturnFailedTitle": "Payment not completed",
+		"checkoutReturnFailedDescription": "Checkout ended before the payment was confirmed. If you did complete the payment, it will still be applied, so check your billing page before trying again."
 	},
 	"footer": {
 		"poweredBy": "Powered by",
@@ -160,6 +164,7 @@
 	"usageBreakdown": {
 		"feature": "Feature",
 		"totalUsage": "Total Usage",
+		"unitPrice": "Unit Price",
 		"totalCost": "Total Cost",
 		"noGroup": "No group",
 		"expandAllAria": "Expand all",
@@ -170,7 +175,6 @@
 	},
 	"metrics": {
 		"revenue": "Revenue",
-		"cost": "Cost",
 		"margin": "Margin",
 		"marginPercent": "Margin %",
 		"cpm": "CPM"
@@ -196,6 +200,14 @@
 		"providerLabel": "Payment provider",
 		"providerHint": "Choose which provider to complete this payment with.",
 		"paid": "Payment complete — your credits have been added."
+	},
+	"pendingCheckout": {
+		"title": "A payment is already in progress",
+		"description": "You started a top-up for this wallet that has not finished yet. Finish that payment, or cancel it and start a new one.",
+		"continueExisting": "Continue that payment",
+		"noLink": "That payment is being processed and cannot be reopened from here.",
+		"startNew": "Cancel it and start over",
+		"startNewHint": "The earlier payment is cancelled. If you have already been charged for it, do not start over — those credits are on their way."
 	},
 	"autoTopUp": {
 		"title": "Auto top-up",
@@ -260,7 +272,11 @@
 		"rowActions": "Actions for {{method}}",
 		"alreadyDefault": "This is already your default card.",
 		"setDefaultUnsupported": "Your payment provider does not support a default card.",
-		"expiredCannotDefault": "An expired card cannot be made default."
+		"expiredCannotDefault": "An expired card cannot be made default.",
+		"allProviders": "All providers",
+		"addForProvider": "Add card ({{provider}})",
+		"providerEmptyTitle": "No {{provider}} cards",
+		"providerEmptyDescription": "Add a card for {{provider}} to pay invoices and enable automatic top-ups"
 	},
 	"invoiceDetail": {
 		"title": "Invoice",
@@ -313,5 +329,27 @@
 	"section": {
 		"emptyTitle": "Nothing to show here",
 		"emptyDescription": "This section has no content configured yet."
+	},
+	"usageFilters": {
+		"groupBy": "Group by",
+		"groupByKey": "Group by: {{key}}",
+		"noGrouping": "None",
+		"filter": "Filter",
+		"filterCount": "Filter ({{count}})",
+		"allFeatures": "All features",
+		"featureCount_one": "{{count}} feature",
+		"featureCount_other": "{{count}} features",
+		"searchFeatures": "Search features",
+		"searchProperties": "Search properties",
+		"searchValues": "Search values",
+		"noResults": "No results",
+		"noValues": "No values found",
+		"loading": "Loading…",
+		"apply": "Apply",
+		"back": "Back",
+		"clearAll": "Clear all",
+		"removeFilter": "Remove {{key}} filter",
+		"noValue": "(none)",
+		"other": "Other"
 	}
 }

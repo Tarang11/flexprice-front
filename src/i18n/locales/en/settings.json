@@ -6,6 +6,10 @@
 	"info": {
 		"ariaLabel": "More information about {{field}}"
 	},
+	"docs": {
+		"docsLink": "Docs",
+		"openDocsTitle": "Open {{name}} docs"
+	},
 	"superAdmin": {
 		"writeDeniedTooltip": "Only a Super Admin can change this setting. Ask a tenant admin for access."
 	},
@@ -21,10 +25,10 @@
 			"enterEmail": "Enter an email address",
 			"emailInvalid": "Please enter a valid email address",
 			"copyFailed": "Could not copy to clipboard",
-			"loginLinkCopied": "Login link copied – share it securely with the user.",
 			"credentialsCopied": "Credentials copied to clipboard.",
 			"credentialsDownloaded": "Credentials downloaded.",
-			"loadError": "Failed to load users. Please try again."
+			"loadError": "Failed to load users. Please try again.",
+			"passwordLinkFailed": "Could not create the link. Try again."
 		},
 		"columns": {
 			"email": "Email",
@@ -38,7 +42,8 @@
 			"add": "Add",
 			"invite": "Invite",
 			"remove": "Remove",
-			"editRoles": "Edit roles"
+			"editRoles": "Edit roles",
+			"resetPassword": "Reset password"
 		},
 		"editRoles": {
 			"title": "Edit roles",
@@ -91,6 +96,14 @@
 			"namePlaceholder": "Jane Doe",
 			"submit": "Invite user"
 		},
+		"passwordLink": {
+			"inviteTitle": "Invite link",
+			"resetTitle": "Password reset link",
+			"description": "Send this link to {{email}}. It works once and expires on {{expiry}}.",
+			"copy": "Copy link",
+			"copied": "Link copied",
+			"note": "You won't see this link again. If it's lost, create a new one from the member's menu."
+		},
 		"credentials": {
 			"title": "Login Credentials",
 			"description": "Share these with the new user so they can sign in.",
@@ -100,16 +113,13 @@
 			"hidePassword": "Hide password",
 			"showPassword": "Show password",
 			"copyPassword": "Copy password",
-			"oneClickHint": "One-click sign-in link – share this with the user.",
-			"copyLoginLink": "Copy login link",
 			"downloadCsv": "Download CSV",
 			"copyAll": "Copy all",
 			"passwordResetNote": "This password can be reset later.",
 			"signInMethodsNote": "User can sign in with email/password or Google.",
-			"csvHeader": "email,password,login_link",
+			"csvHeader": "email,password",
 			"copyBlockEmailLine": "Email: {{email}}",
-			"copyBlockPasswordLine": "Password: {{password}}",
-			"copyBlockLoginLine": "Login link: {{url}}"
+			"copyBlockPasswordLine": "Password: {{password}}"
 		},
 		"tabs": {
 			"team": "Team"
@@ -131,6 +141,10 @@
 			"resetToDefaults": "Reset to defaults"
 		},
 		"invoiceConfiguration": {
+			"actions": {
+				"docs": "Docs",
+				"docsTitle": "Open invoice configuration docs"
+			},
 			"title": "Invoice configuration",
 			"previewLabel": "Preview",
 			"nextInvoiceNumber": "Next invoice number",
@@ -181,6 +195,10 @@
 			}
 		},
 		"subscriptionConfiguration": {
+			"actions": {
+				"docs": "Docs",
+				"docsTitle": "Open subscription configuration docs"
+			},
 			"title": "Subscription configuration",
 			"previewLabel": "Configuration preview",
 			"saveSuccess": "Subscription configuration saved",
@@ -210,6 +228,34 @@
 				"description2": "A subscription.cancelled webhook fires so downstream systems stay in sync",
 				"description3": "Future credit grants are cancelled, a final invoice is generated for the partial period"
 			}
+		},
+		"taxConfiguration": {
+			"title": "Tax configuration",
+			"description": "Use an external tax engine to calculate tax on invoices and credit notes instead of your Flexprice tax rates.",
+			"fields": {
+				"enabled": "Use an external tax engine",
+				"provider": "Tax engine"
+			},
+			"hints": {
+				"enabled": "When off, Flexprice calculates tax from the tax rates you have configured.",
+				"provider": "Which engine calculates tax. Stripe is the only external engine currently supported."
+			},
+			"providers": {
+				"flexprice": "Flexprice (native)",
+				"stripe": "Stripe Tax"
+			},
+			"warnings": {
+				"overridesNativeRates": "While an external engine is in force, your Flexprice tax rates are no longer applied, and linking new tax rates or using overrides is rejected. Credit notes keep the tax treatment of the invoice they were raised against.",
+				"missingConnection": "No Stripe connection was found in this environment. Without one, tax calculation fails — it does not fall back to your Flexprice tax rates. Add the connection before enabling this.",
+				"nativeSelected": "Flexprice is the native engine, so selecting it here changes nothing. Turn this off instead, or choose an external engine."
+			},
+			"actions": {
+				"docs": "Docs",
+				"docsTitle": "Open the tax configuration documentation",
+				"superAdminOnly": "Only a Super Admin can change this setting."
+			},
+			"saveSuccess": "Tax configuration saved.",
+			"saveError": "Could not save the tax configuration."
 		},
 		"customCurrencyConfiguration": {
 			"title": "Custom currency configuration",
@@ -253,6 +299,50 @@
 				"symbolRequired": "Every currency needs a symbol.",
 				"factorInvalid": "Every rate must be greater than 0."
 			}
+		},
+		"forexRates": {
+			"modal": {
+				"titleAdd": "Add forex rate",
+				"titleEdit": "Edit forex rate",
+				"from": "From currency",
+				"to": "To currency",
+				"pair": "Currency pair",
+				"selectCurrency": "Select currency",
+				"rate": "Rate",
+				"ratePlaceholder": "83.00",
+				"start": "Valid from",
+				"end": "Valid until",
+				"startPlaceholder": "Always",
+				"endPlaceholder": "No end",
+				"clear": "Clear",
+				"windowHint": "A blank start has no start limit and a blank end means no expiry. Windows are matched at the moment an invoice is finalized or a checkout is created.",
+				"editWindowHint": "Saved dates can be changed but not cleared. To remove a date, delete this override and add a new one.",
+				"cancel": "Cancel",
+				"save": "Save",
+				"errors": {
+					"pairRequired": "Select both currencies.",
+					"pairSame": "From and To must be different currencies.",
+					"rateRequired": "Enter a rate.",
+					"ratePositive": "Rate must be a number greater than 0.",
+					"windowOrder": "Valid from must be before Valid until.",
+					"windowOverlap": "Overlaps another override in this list."
+				}
+			},
+			"title": "Global forex rates",
+			"description": "Default exchange rates used when a customer is billed in a different currency from the plan's.",
+			"addRate": "Add rate",
+			"empty": "No forex rates yet",
+			"loadError": "Could not load forex rates.",
+			"paginationUnit": "rates",
+			"writeDeniedTooltip": "You don't have permission to manage forex rates. Ask a tenant admin for access.",
+			"columns": {
+				"rate": "Rate",
+				"updated": "Last updated"
+			},
+			"toast": {
+				"created": "Forex rate added",
+				"updated": "Forex rate updated"
+			}
 		}
 	},
 	"customerPortal": {
@@ -273,7 +363,20 @@
 			"saveSuccess": "Portal settings saved",
 			"saveError": "Failed to save portal settings",
 			"showPaymentMethods": "Show payment methods",
-			"showPaymentMethodsDescription": "Let customers view saved cards and add a new one from the portal"
+			"showPaymentMethodsDescription": "Let customers view saved cards and add a new one from the portal",
+			"showUsageProperties": "Group and filter usage by properties",
+			"showUsagePropertiesDescription": "Customers can group and filter usage by event properties, such as region or model",
+			"allowedKeys": "Only show these properties",
+			"allowedKeysDescription": "Leave empty to show all properties.",
+			"hiddenKeys": "Always hide these properties",
+			"hiddenKeysDescription": "Properties that have quantity type values are hidden by default",
+			"addKey": "Add property",
+			"searchKeys": "Search or type a property",
+			"addTypedKey": "Add \"{{key}}\"",
+			"removeKey": "Remove {{key}}",
+			"loadingKeys": "Loading properties…",
+			"noKeysFound": "No properties found in the last 7 days",
+			"invalidKeys": "Properties can contain only letters, numbers, _ and ."
 		}
 	},
 	"customerOnboarding": {
@@ -456,6 +559,9 @@
 			"organizationName": "Organization Name",
 			"organizationNamePlaceholder": "Enter your organization name",
 			"billingSection": "Billing Details",
+			"billingEmail": "Billing Email",
+			"helpEmail": "Help Email",
+			"phone": "Phone",
 			"country": "Country",
 			"selectCountry": "Select Country",
 			"noCountries": "No countries Available",
@@ -589,6 +695,8 @@
 			"events": "Events",
 			"invoice": "Invoice",
 			"creditTopups": "Credit Topups",
+			"walletDebits": "Wallet Debits",
+			"walletLedger": "Wallet Ledger",
 			"creditUsage": "Credit Usage",
 			"usageAnalytics": "Usage Analytics"
 		},
@@ -789,6 +897,7 @@
 			"webhookPasswordRequired": "Webhook password is required",
 			"secretKeyRequired": "Secret key is required",
 			"webhookSecretRequired": "Webhook secret is required",
+			"paymentGatewayRequired": "Select at least one payment gateway",
 			"keyIdRequired": "Key ID is required",
 			"clientSideTokenRequired": "Client-side token is required",
 			"organizationIdRequired": "Organization ID is required",
@@ -901,7 +1010,15 @@
 			"webhookBodyHtml": "In Zoho Books, create Invoice and Contact webhooks and set this URL on each. Use the same secret here and in Zoho so Flexprice can verify <header>X-Zoho-Webhook-Signature</header>.",
 			"credentialsHidden": "OAuth credentials are encrypted and hidden. To update credentials, delete the connection and create a new one.",
 			"selectTenantForUrl": "Select tenant and environment to generate URL",
-			"toastUpdated": "Zoho Books connection updated successfully"
+			"toastUpdated": "Zoho Books connection updated successfully",
+			"attachPaymentGateways": "Attach payment gateways to invoices",
+			"attachPaymentGatewaysDesc": "Adds pay online links to synced invoices.",
+			"paymentGateways": "Payment gateways",
+			"paymentGatewaysDesc": "Select the gateways to show on synced invoices. Each must be set up under Online Payments in Zoho Books.",
+			"paypalPaymentMethod": "PayPal payment method",
+			"paypalPaymentMethodDesc": "How customers pay through PayPal on synced invoices.",
+			"paypalPaymentMethodStandard": "Standard",
+			"paypalPaymentMethodAdaptive": "Adaptive"
 		},
 		"quickBooks": {
 			"descriptionEdit": "Update your QuickBooks connection settings.",
@@ -1205,9 +1322,7 @@
 					"sections": {
 						"overview": {
 							"title": "Overview",
-							"paragraphs": [
-								"The Flexprice Stripe app enables invoicing, tax collection, and payment via Stripe."
-							]
+							"paragraphs": ["The Flexprice Stripe app enables invoicing, tax collection, and payment via Stripe."]
 						},
 						"stripeInvoicing": {
 							"title": "Stripe Invoicing",
@@ -1301,9 +1416,7 @@
 						},
 						"invoiceSync": {
 							"title": "Invoice Sync",
-							"paragraphs": [
-								"Push invoices from Flexprice to HubSpot to keep your CRM up to date with billing information."
-							]
+							"paragraphs": ["Push invoices from Flexprice to HubSpot to keep your CRM up to date with billing information."]
 						},
 						"customerSync": {
 							"title": "Customer Sync",
@@ -1313,15 +1426,11 @@
 						},
 						"paymentsSync": {
 							"title": "Payments Sync",
-							"paragraphs": [
-								"Keep payment records synchronized between both platforms for accurate financial reporting."
-							]
+							"paragraphs": ["Keep payment records synchronized between both platforms for accurate financial reporting."]
 						},
 						"revenueReporting": {
 							"title": "Revenue Calculations on HubSpot",
-							"paragraphs": [
-								"Leverage HubSpot's reporting capabilities with accurate revenue data synced from Flexprice."
-							]
+							"paragraphs": ["Leverage HubSpot's reporting capabilities with accurate revenue data synced from Flexprice."]
 						}
 					}
 				},
@@ -1345,9 +1454,7 @@
 						},
 						"createInvoice": {
 							"title": "Create Invoice in Zoho Books",
-							"paragraphs": [
-								"Generate Zoho Books invoices seamlessly from Flexprice usage data or billing triggers, reducing manual work."
-							]
+							"paragraphs": ["Generate Zoho Books invoices seamlessly from Flexprice usage data or billing triggers, reducing manual work."]
 						},
 						"transformInvoice": {
 							"title": "Transform Flexprice Invoice to Zoho Books Invoice",
@@ -1520,9 +1627,7 @@
 						},
 						"invoiceSync": {
 							"title": "Invoice Sync",
-							"paragraphs": [
-								"When invoice sync is enabled, Flexprice automatically pushes finalized invoices to Tabs."
-							]
+							"paragraphs": ["When invoice sync is enabled, Flexprice automatically pushes finalized invoices to Tabs."]
 						}
 					}
 				},
@@ -1592,9 +1697,7 @@
 						},
 						"usageReporting": {
 							"title": "Usage Reporting",
-							"paragraphs": [
-								"Once connected, a scheduled job reports usage per subscription to Azure Marketplace's usage event API."
-							]
+							"paragraphs": ["Once connected, a scheduled job reports usage per subscription to Azure Marketplace's usage event API."]
 						}
 					}
 				}
@@ -1639,11 +1742,13 @@
 			"secretKeyHint": "Your Stripe secret key from the API keys section",
 			"pullFromStripe": "Pull from Stripe",
 			"pushToStripe": "Push to Stripe",
+			"customerSyncHint": "Push to Stripe. Required for Stripe Tax — tax cannot be calculated for a customer that does not exist in Stripe.",
 			"webhookSecretDescription": "The webhook secret provided by Stripe after setting up the webhook endpoint",
 			"webhookSecretPlaceholder": "whsec_...",
 			"webhookIntro": "Set up this webhook URL in your Stripe dashboard to receive event notifications:",
 			"webhookEventsIntro": "Based on your sync configuration, subscribe to these events in your Stripe dashboard:",
 			"labels": {
+				"customers": "Customers",
 				"plans": "Plans",
 				"invoices": "Invoices",
 				"prices": "Prices",

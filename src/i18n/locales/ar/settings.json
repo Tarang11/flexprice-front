@@ -6,6 +6,10 @@
 	"info": {
 		"ariaLabel": "مزيد من المعلومات حول {{field}}"
 	},
+	"docs": {
+		"docsLink": "المستندات",
+		"openDocsTitle": "فتح مستندات {{name}}"
+	},
 	"superAdmin": {
 		"writeDeniedTooltip": "يمكن فقط لمسؤول متميز (Super Admin) تغيير هذا الإعداد. اطلب الوصول من مسؤول المستأجر."
 	},
@@ -21,10 +25,10 @@
 			"enterEmail": "أدخل عنوان بريد إلكتروني",
 			"emailInvalid": "يرجى إدخال بريد إلكتروني صالح",
 			"copyFailed": "تعذّر النسخ إلى الحافظة",
-			"loginLinkCopied": "تم نسخ رابط تسجيل الدخول – شاركه مع المستخدم بشكل آمن.",
 			"credentialsCopied": "تم نسخ بيانات الدخول إلى الحافظة.",
 			"credentialsDownloaded": "تم تنزيل بيانات الدخول.",
-			"loadError": "فشل تحميل المستخدمين. يُرجى المحاولة مرة أخرى."
+			"loadError": "فشل تحميل المستخدمين. يُرجى المحاولة مرة أخرى.",
+			"passwordLinkFailed": "تعذّر إنشاء الرابط. حاول مرة أخرى."
 		},
 		"columns": {
 			"email": "البريد الإلكتروني",
@@ -41,7 +45,8 @@
 			"add": "إضافة",
 			"invite": "دعوة",
 			"remove": "إزالة",
-			"editRoles": "تعديل الأدوار"
+			"editRoles": "تعديل الأدوار",
+			"resetPassword": "إعادة تعيين كلمة المرور"
 		},
 		"editRoles": {
 			"title": "تعديل الأدوار",
@@ -97,6 +102,14 @@
 			"namePlaceholder": "محمد أحمد",
 			"submit": "دعوة مستخدم"
 		},
+		"passwordLink": {
+			"inviteTitle": "رابط الدعوة",
+			"resetTitle": "رابط إعادة تعيين كلمة المرور",
+			"description": "أرسل هذا الرابط إلى {{email}}. يعمل مرة واحدة وتنتهي صلاحيته في {{expiry}}.",
+			"copy": "نسخ الرابط",
+			"copied": "تم نسخ الرابط",
+			"note": "لن ترى هذا الرابط مرة أخرى. إذا فُقد، أنشئ رابطاً جديداً من قائمة العضو."
+		},
 		"credentials": {
 			"title": "بيانات تسجيل الدخول",
 			"description": "شارك هذه البيانات مع المستخدم الجديد ليتمكن من الدخول.",
@@ -106,16 +119,13 @@
 			"hidePassword": "إخفاء كلمة المرور",
 			"showPassword": "إظهار كلمة المرور",
 			"copyPassword": "نسخ كلمة المرور",
-			"oneClickHint": "رابط تسجيل دخول بضغطة واحدة – شاركه مع المستخدم.",
-			"copyLoginLink": "نسخ رابط تسجيل الدخول",
 			"downloadCsv": "تنزيل CSV",
 			"copyAll": "نسخ الكل",
 			"passwordResetNote": "يمكن إعادة تعيين كلمة المرور لاحقاً.",
 			"signInMethodsNote": "يمكن للمستخدم تسجيل الدخول ببريد/كلمة مرور أو Google.",
-			"csvHeader": "email,password,login_link",
+			"csvHeader": "email,password",
 			"copyBlockEmailLine": "Email: {{email}}",
-			"copyBlockPasswordLine": "Password: {{password}}",
-			"copyBlockLoginLine": "Login link: {{url}}"
+			"copyBlockPasswordLine": "Password: {{password}}"
 		},
 		"tabs": {
 			"team": "الفريق"
@@ -137,6 +147,10 @@
 			"resetToDefaults": "إعادة التعيين إلى الافتراضي"
 		},
 		"invoiceConfiguration": {
+			"actions": {
+				"docs": "المستندات",
+				"docsTitle": "فتح مستندات إعدادات الفواتير"
+			},
 			"title": "إعداد الفواتير",
 			"previewLabel": "معاينة",
 			"nextInvoiceNumber": "رقم الفاتورة التالي",
@@ -187,6 +201,10 @@
 			}
 		},
 		"subscriptionConfiguration": {
+			"actions": {
+				"docs": "المستندات",
+				"docsTitle": "فتح مستندات إعدادات الاشتراكات"
+			},
 			"title": "إعداد الاشتراكات",
 			"previewLabel": "معاينة الإعداد",
 			"saveSuccess": "تم حفظ إعداد الاشتراكات",
@@ -216,6 +234,34 @@
 				"description2": "يُرسل webhook من نوع subscription.cancelled لمزامنة الأنظمة الأخرى",
 				"description3": "تُلغى منح الائتمان المستقبلية، وتُنشأ فاتورة نهائية للفترة الجزئية"
 			}
+		},
+		"taxConfiguration": {
+			"title": "إعداد الضريبة",
+			"description": "استخدم محرك ضرائب خارجي لحساب الضريبة على الفواتير وإشعارات الدائن بدلاً من أسعار الضرائب في Flexprice.",
+			"fields": {
+				"enabled": "استخدام محرك ضرائب خارجي",
+				"provider": "محرك الضريبة"
+			},
+			"hints": {
+				"enabled": "عند الإيقاف، يحسب Flexprice الضريبة من أسعار الضرائب التي أعددتها.",
+				"provider": "المحرك الذي يحسب الضريبة. Stripe هو المحرك الخارجي الوحيد المدعوم حالياً."
+			},
+			"providers": {
+				"flexprice": "Flexprice (الأصلي)",
+				"stripe": "Stripe Tax"
+			},
+			"warnings": {
+				"overridesNativeRates": "أثناء تفعيل محرك خارجي، لم تعد أسعار الضرائب في Flexprice مطبّقة، ويُرفض ربط أسعار ضرائب جديدة أو استخدام التجاوزات. تحتفظ إشعارات الدائن بمعاملة الضريبة الخاصة بالفاتورة التي صدرت عنها.",
+				"missingConnection": "لم يتم العثور على اتصال Stripe في هذه البيئة. بدونه يفشل حساب الضريبة ولا يعود إلى أسعار الضرائب في Flexprice. أضف الاتصال قبل التفعيل.",
+				"nativeSelected": "Flexprice هو المحرك الأصلي، لذا اختياره هنا لا يغيّر شيئاً. أوقف هذا الإعداد بدلاً من ذلك، أو اختر محركاً خارجياً."
+			},
+			"actions": {
+				"docs": "المستندات",
+				"docsTitle": "افتح مستندات إعداد الضريبة",
+				"superAdminOnly": "يمكن لمسؤول عام فقط تغيير هذا الإعداد."
+			},
+			"saveSuccess": "تم حفظ إعداد الضريبة.",
+			"saveError": "لم يتم حفظ إعداد الضريبة."
 		},
 		"customCurrencyConfiguration": {
 			"title": "إعدادات العملة المخصصة",
@@ -259,6 +305,50 @@
 				"symbolRequired": "كل عملة تحتاج إلى رمز معروض.",
 				"factorInvalid": "يجب أن يكون كل سعر أكبر من 0."
 			}
+		},
+		"forexRates": {
+			"modal": {
+				"titleAdd": "إضافة سعر صرف",
+				"titleEdit": "تعديل سعر الصرف",
+				"from": "من العملة",
+				"to": "إلى العملة",
+				"pair": "زوج العملات",
+				"selectCurrency": "اختر العملة",
+				"rate": "السعر",
+				"ratePlaceholder": "83.00",
+				"start": "صالح من",
+				"end": "صالح حتى",
+				"startPlaceholder": "دائمًا",
+				"endPlaceholder": "بلا نهاية",
+				"clear": "مسح",
+				"windowHint": "البداية الفارغة تعني عدم وجود حد للبداية، والنهاية الفارغة تعني عدم الانتهاء. تتم مطابقة الفترات لحظة إصدار الفاتورة أو إنشاء جلسة الدفع.",
+				"editWindowHint": "يمكن تغيير التواريخ المحفوظة ولكن لا يمكن مسحها. لإزالة تاريخ، احذف هذا التجاوز وأضف تجاوزًا جديدًا.",
+				"cancel": "إلغاء",
+				"save": "حفظ",
+				"errors": {
+					"pairRequired": "اختر العملتين.",
+					"pairSame": "يجب أن تكون عملتا من وإلى مختلفتين.",
+					"rateRequired": "أدخل السعر.",
+					"ratePositive": "يجب أن يكون السعر رقمًا أكبر من 0.",
+					"windowOrder": "يجب أن يكون تاريخ البداية قبل تاريخ النهاية.",
+					"windowOverlap": "يتداخل مع تجاوز آخر في هذه القائمة."
+				}
+			},
+			"title": "أسعار الصرف العامة",
+			"description": "أسعار الصرف الافتراضية المستخدمة عندما تتم فوترة العميل بعملة مختلفة عن عملة الخطة.",
+			"addRate": "إضافة سعر",
+			"empty": "لا توجد أسعار صرف بعد",
+			"loadError": "تعذر تحميل أسعار الصرف.",
+			"paginationUnit": "أسعار",
+			"writeDeniedTooltip": "ليست لديك صلاحية لإدارة أسعار الصرف. اطلب الوصول من مسؤول المستأجر.",
+			"columns": {
+				"rate": "السعر",
+				"updated": "آخر تحديث"
+			},
+			"toast": {
+				"created": "تمت إضافة سعر الصرف",
+				"updated": "تم تحديث سعر الصرف"
+			}
 		}
 	},
 	"customerPortal": {
@@ -279,7 +369,20 @@
 			"saveSuccess": "تم حفظ إعدادات البوابة",
 			"saveError": "فشل حفظ إعدادات البوابة",
 			"showPaymentMethods": "إظهار طرق الدفع",
-			"showPaymentMethodsDescription": "السماح للعملاء بعرض البطاقات المحفوظة وإضافة بطاقة جديدة من البوابة"
+			"showPaymentMethodsDescription": "السماح للعملاء بعرض البطاقات المحفوظة وإضافة بطاقة جديدة من البوابة",
+			"showUsageProperties": "تجميع الاستخدام وتصفيته حسب الخصائص",
+			"showUsagePropertiesDescription": "يمكن للعملاء تجميع الاستخدام وتصفيته حسب خصائص الأحداث، مثل المنطقة أو النموذج",
+			"allowedKeys": "إظهار هذه الخصائص فقط",
+			"allowedKeysDescription": "اتركه فارغًا لإظهار جميع الخصائص.",
+			"hiddenKeys": "إخفاء هذه الخصائص دائمًا",
+			"hiddenKeysDescription": "الخصائص التي تحمل قيمًا من نوع الكمية مخفية افتراضيًا",
+			"addKey": "إضافة خاصية",
+			"searchKeys": "ابحث أو اكتب خاصية",
+			"addTypedKey": "إضافة \"{{key}}\"",
+			"removeKey": "إزالة {{key}}",
+			"loadingKeys": "جارٍ تحميل الخصائص…",
+			"noKeysFound": "لم يتم العثور على خصائص في آخر 7 أيام",
+			"invalidKeys": "يمكن أن تحتوي الخصائص على أحرف وأرقام و _ و . فقط"
 		}
 	},
 	"customerOnboarding": {
@@ -462,6 +565,9 @@
 			"organizationName": "اسم المنظمة",
 			"organizationNamePlaceholder": "أدخل اسم منظمتك",
 			"billingSection": "تفاصيل الفوترة",
+			"billingEmail": "البريد الإلكتروني للفوترة",
+			"helpEmail": "البريد الإلكتروني للدعم",
+			"phone": "الهاتف",
 			"country": "الدولة",
 			"selectCountry": "اختر الدولة",
 			"noCountries": "لا توجد دول متاحة",
@@ -588,6 +694,8 @@
 			"events": "الأحداث",
 			"invoice": "الفاتورة",
 			"creditTopups": "إعادة شحن الأرصدة",
+			"walletDebits": "خصومات المحفظة",
+			"walletLedger": "سجل المحفظة",
 			"creditUsage": "استخدام الأرصدة",
 			"usageAnalytics": "تحليلات الاستخدام"
 		},
@@ -788,6 +896,7 @@
 			"webhookPasswordRequired": "كلمة مرور الويب هوك مطلوبة",
 			"secretKeyRequired": "المفتاح السري مطلوب",
 			"webhookSecretRequired": "سرّ الويب هوك مطلوب",
+			"paymentGatewayRequired": "اختر بوابة دفع واحدة على الأقل",
 			"keyIdRequired": "معرّف المفتاح مطلوب",
 			"clientSideTokenRequired": "رمز الواجهة مطلوب",
 			"organizationIdRequired": "معرّف المنظمة مطلوب",
@@ -900,7 +1009,15 @@
 			"webhookBodyHtml": "في Zoho Books، أنشئ ويب هوك للفواتير وجهات الاتصال واضبط هذا العنوان لكل منهما. استخدم نفس السرّ هنا وفي Zoho حتى يتحقق Flexprice من <header>X-Zoho-Webhook-Signature</header>.",
 			"credentialsHidden": "بيانات OAuth مشفّرة ومخفية. لتحديثها احذف الاتصال وأنشئ اتصالاً جديداً.",
 			"selectTenantForUrl": "اختر المستأجر والبيئة لتوليد الرابط",
-			"toastUpdated": "تم تحديث اتصال Zoho Books بنجاح"
+			"toastUpdated": "تم تحديث اتصال Zoho Books بنجاح",
+			"attachPaymentGateways": "إرفاق بوابات الدفع بالفواتير",
+			"attachPaymentGatewaysDesc": "يضيف روابط الدفع الإلكتروني إلى الفواتير المُزامَنة.",
+			"paymentGateways": "بوابات الدفع",
+			"paymentGatewaysDesc": "اختر البوابات التي تظهر على الفواتير المُزامَنة. يجب إعداد كل بوابة ضمن المدفوعات الإلكترونية في Zoho Books.",
+			"paypalPaymentMethod": "طريقة الدفع عبر PayPal",
+			"paypalPaymentMethodDesc": "كيفية دفع العملاء عبر PayPal على الفواتير المُزامَنة.",
+			"paypalPaymentMethodStandard": "قياسي",
+			"paypalPaymentMethodAdaptive": "تكيّفي"
 		},
 		"quickBooks": {
 			"descriptionEdit": "حدّث إعدادات اتصال QuickBooks.",
@@ -1204,15 +1321,11 @@
 					"sections": {
 						"overview": {
 							"title": "نظرة عامة",
-							"paragraphs": [
-								"يتيح تطبيق Flexprice لـ Stripe إصدار الفواتير وتحصيل الضرائب والمدفوعات عبر Stripe."
-							]
+							"paragraphs": ["يتيح تطبيق Flexprice لـ Stripe إصدار الفواتير وتحصيل الضرائب والمدفوعات عبر Stripe."]
 						},
 						"stripeInvoicing": {
 							"title": "فوترة Stripe",
-							"paragraphs": [
-								"أنشئ وأرسل الفواتير عبر Stripe Invoicing مباشرة من Flexprice مع تحصيل المدفوعات تلقائياً."
-							]
+							"paragraphs": ["أنشئ وأرسل الفواتير عبر Stripe Invoicing مباشرة من Flexprice مع تحصيل المدفوعات تلقائياً."]
 						},
 						"automaticTax": {
 							"title": "حساب الضريبة تلقائياً",
@@ -1264,21 +1377,15 @@
 					"sections": {
 						"overview": {
 							"title": "نظرة عامة",
-							"paragraphs": [
-								"يتيح تطبيق Flexprice لـ Chargebee مزامنة الفواتير والرسوم والأسعار بين المنصتين لتبسيط سير عمل الفوترة."
-							]
+							"paragraphs": ["يتيح تطبيق Flexprice لـ Chargebee مزامنة الفواتير والرسوم والأسعار بين المنصتين لتبسيط سير عمل الفوترة."]
 						},
 						"invoiceSync": {
 							"title": "مزامنة الفواتير",
-							"paragraphs": [
-								"زامن الفواتير من Flexprice إلى Chargebee ليبقى نظام الفوترة محدثاً بأحدث البيانات."
-							]
+							"paragraphs": ["زامن الفواتير من Flexprice إلى Chargebee ليبقى نظام الفوترة محدثاً بأحدث البيانات."]
 						},
 						"chargePriceSync": {
 							"title": "مزامنة الرسوم والأسعار",
-							"paragraphs": [
-								"زامن الرسوم والأسعار بين Flexprice وChargebee للحفاظ على اتساق منصة الفوترة."
-							]
+							"paragraphs": ["زامن الرسوم والأسعار بين Flexprice وChargebee للحفاظ على اتساق منصة الفوترة."]
 						}
 					}
 				},
@@ -1288,39 +1395,27 @@
 					"sections": {
 						"overview": {
 							"title": "نظرة عامة",
-							"paragraphs": [
-								"يتيح تطبيق Flexprice لـ HubSpot مزامنة الصفقات والفواتير والعملاء والمدفوعات بين HubSpot وFlexprice."
-							]
+							"paragraphs": ["يتيح تطبيق Flexprice لـ HubSpot مزامنة الصفقات والفواتير والعملاء والمدفوعات بين HubSpot وFlexprice."]
 						},
 						"dealLineItems": {
 							"title": "مزامنة بنود الصفقة",
-							"paragraphs": [
-								"زامن بنود الصفقات من HubSpot إلى Flexprice لضمان تتبع الإيرادات والفوترة بدقة."
-							]
+							"paragraphs": ["زامن بنود الصفقات من HubSpot إلى Flexprice لضمان تتبع الإيرادات والفوترة بدقة."]
 						},
 						"invoiceSync": {
 							"title": "مزامنة الفواتير",
-							"paragraphs": [
-								"ادفع الفواتير من Flexprice إلى HubSpot ليبقى الـ CRM محدثاً بمعلومات الفوترة."
-							]
+							"paragraphs": ["ادفع الفواتير من Flexprice إلى HubSpot ليبقى الـ CRM محدثاً بمعلومات الفوترة."]
 						},
 						"customerSync": {
 							"title": "مزامنة العملاء",
-							"paragraphs": [
-								"زامن بيانات العملاء بين HubSpot وFlexprice لمصدر واحد موثوق لمعلومات العملاء."
-							]
+							"paragraphs": ["زامن بيانات العملاء بين HubSpot وFlexprice لمصدر واحد موثوق لمعلومات العملاء."]
 						},
 						"paymentsSync": {
 							"title": "مزامنة المدفوعات",
-							"paragraphs": [
-								"حافظ على تسجيلات المدفوعات متزامنة بين المنصتين للتقارير المالية الدقيقة."
-							]
+							"paragraphs": ["حافظ على تسجيلات المدفوعات متزامنة بين المنصتين للتقارير المالية الدقيقة."]
 						},
 						"revenueReporting": {
 							"title": "حسابات الإيراد في HubSpot",
-							"paragraphs": [
-								"استفد من تقارير HubSpot مع بيانات إيراد دقيقة مزامنة من Flexprice."
-							]
+							"paragraphs": ["استفد من تقارير HubSpot مع بيانات إيراد دقيقة مزامنة من Flexprice."]
 						}
 					}
 				},
@@ -1338,21 +1433,15 @@
 					"sections": {
 						"createCustomer": {
 							"title": "إنشاء عميل في Zoho Books",
-							"paragraphs": [
-								"أنشئ أو حدّث العملاء في Zoho Books تلقائياً عند إضافة عميل أو تعديله في Flexprice."
-							]
+							"paragraphs": ["أنشئ أو حدّث العملاء في Zoho Books تلقائياً عند إضافة عميل أو تعديله في Flexprice."]
 						},
 						"createInvoice": {
 							"title": "إنشاء فاتورة في Zoho Books",
-							"paragraphs": [
-								"ولّد فواتير Zoho Books بسلاسة من بيانات الاستخدام أو محفزات الفوترة في Flexprice مع تقليل العمل اليدوي."
-							]
+							"paragraphs": ["ولّد فواتير Zoho Books بسلاسة من بيانات الاستخدام أو محفزات الفوترة في Flexprice مع تقليل العمل اليدوي."]
 						},
 						"transformInvoice": {
 							"title": "تحويل فاتورة Flexprice إلى Zoho Books",
-							"paragraphs": [
-								"حوّل كائن فاتورة Flexprice إلى تنسيق فاتورة Zoho Books لتبسيط تدفق البيانات وضمان الدقة."
-							]
+							"paragraphs": ["حوّل كائن فاتورة Flexprice إلى تنسيق فاتورة Zoho Books لتبسيط تدفق البيانات وضمان الدقة."]
 						}
 					}
 				},
@@ -1374,9 +1463,7 @@
 						},
 						"customerSync": {
 							"title": "مزامنة العملاء",
-							"paragraphs": [
-								"يُنشأ العملاء في QuickBooks تلقائياً عند مزامنة الفواتير، مع مزامنة الاسم والبريد وعنوان الفوترة."
-							]
+							"paragraphs": ["يُنشأ العملاء في QuickBooks تلقائياً عند مزامنة الفواتير، مع مزامنة الاسم والبريد وعنوان الفوترة."]
 						},
 						"invoiceSync": {
 							"title": "مزامنة الفواتير",
@@ -1386,9 +1473,7 @@
 						},
 						"tokenRefresh": {
 							"title": "تجديد الرمز تلقائياً",
-							"paragraphs": [
-								"يُجدّد الخادم رموز OAuth تلقائياً عند انتهائها لضمان استمرار المزامنة دون تدخل يدوي."
-							]
+							"paragraphs": ["يُجدّد الخادم رموز OAuth تلقائياً عند انتهائها لضمان استمرار المزامنة دون تدخل يدوي."]
 						}
 					}
 				},
@@ -1398,27 +1483,19 @@
 					"sections": {
 						"overview": {
 							"title": "نظرة عامة",
-							"paragraphs": [
-								"يتيح تطبيق Flexprice لـ Nomod إصدار الفواتير وتحصيل المدفوعات عبر روابط دفع Nomod مع ربط سلس بـ Flexprice."
-							]
+							"paragraphs": ["يتيح تطبيق Flexprice لـ Nomod إصدار الفواتير وتحصيل المدفوعات عبر روابط دفع Nomod مع ربط سلس بـ Flexprice."]
 						},
 						"invoiceSync": {
 							"title": "مزامنة الفواتير",
-							"paragraphs": [
-								"أنشئ وأرسل فواتير بروابط دفع عبر Nomod من Flexprice مع إمكانية أتمتة التحصيل عبر الروابط."
-							]
+							"paragraphs": ["أنشئ وأرسل فواتير بروابط دفع عبر Nomod من Flexprice مع إمكانية أتمتة التحصيل عبر الروابط."]
 						},
 						"paymentLinks": {
 							"title": "روابط الدفع",
-							"paragraphs": [
-								"أنشئ روابط دفع آمنة لفواتيرك عبر Nomod ليتمكن العملاء من الدفع بسرعة عبر الطرق المدعومة."
-							]
+							"paragraphs": ["أنشئ روابط دفع آمنة لفواتيرك عبر Nomod ليتمكن العملاء من الدفع بسرعة عبر الطرق المدعومة."]
 						},
 						"webhooks": {
 							"title": "تكامل الويبهوك",
-							"paragraphs": [
-								"استقبل إشعارات فورية عن أحداث الفواتير وروابط الدفع عبر الويبهوك لمتابعة حالة الدفع وإنشاء الفواتير وغيرها."
-							]
+							"paragraphs": ["استقبل إشعارات فورية عن أحداث الفواتير وروابط الدفع عبر الويبهوك لمتابعة حالة الدفع وإنشاء الفواتير وغيرها."]
 						}
 					}
 				},
@@ -1428,27 +1505,19 @@
 					"sections": {
 						"overview": {
 							"title": "نظرة عامة",
-							"paragraphs": [
-								"يتيح تطبيق Flexprice لـ Moyasar إصدار الفواتير وتحصيل المدفوعات عبر بوابة Moyasar مع ربط سلس بـ Flexprice."
-							]
+							"paragraphs": ["يتيح تطبيق Flexprice لـ Moyasar إصدار الفواتير وتحصيل المدفوعات عبر بوابة Moyasar مع ربط سلس بـ Flexprice."]
 						},
 						"invoiceSync": {
 							"title": "مزامنة الفواتير",
-							"paragraphs": [
-								"أنشئ وأرسل الفواتير عبر Moyasar من Flexprice مع إمكانية أتمتة التحصيل عبر البوابة."
-							]
+							"paragraphs": ["أنشئ وأرسل الفواتير عبر Moyasar من Flexprice مع إمكانية أتمتة التحصيل عبر البوابة."]
 						},
 						"securePayments": {
 							"title": "مدفوعات آمنة",
-							"paragraphs": [
-								"تحصّل المدفوعات بسرعة عبر Moyasar مع خيارات دفع متعددة لتحسين التجربة وتسريع التحصيل."
-							]
+							"paragraphs": ["تحصّل المدفوعات بسرعة عبر Moyasar مع خيارات دفع متعددة لتحسين التجربة وتسريع التحصيل."]
 						},
 						"webhooks": {
 							"title": "تكامل الويبهوك",
-							"paragraphs": [
-								"استقبل إشعارات فورية عن أحداث الدفع عبر الويبهوك؛ اشترك في حدث payment_paid لمتابعة حالة الدفع."
-							]
+							"paragraphs": ["استقبل إشعارات فورية عن أحداث الدفع عبر الويبهوك؛ اشترك في حدث payment_paid لمتابعة حالة الدفع."]
 						}
 					}
 				},
@@ -1458,27 +1527,19 @@
 					"sections": {
 						"overview": {
 							"title": "نظرة عامة",
-							"paragraphs": [
-								"يتيح تطبيق Flexprice لـ Paddle إصدار الفواتير وتحصيل المدفوعات عبر بوابة Paddle مع ربط سلس بـ Flexprice."
-							]
+							"paragraphs": ["يتيح تطبيق Flexprice لـ Paddle إصدار الفواتير وتحصيل المدفوعات عبر بوابة Paddle مع ربط سلس بـ Flexprice."]
 						},
 						"invoiceSync": {
 							"title": "مزامنة الفواتير",
-							"paragraphs": [
-								"أنشئ وأرسل الفواتير عبر Paddle من Flexprice مع إمكانية أتمتة التحصيل عبر البوابة."
-							]
+							"paragraphs": ["أنشئ وأرسل الفواتير عبر Paddle من Flexprice مع إمكانية أتمتة التحصيل عبر البوابة."]
 						},
 						"securePayments": {
 							"title": "مدفوعات آمنة",
-							"paragraphs": [
-								"تحصّل المدفوعات بسرعة عبر Paddle مع خيارات دفع متعددة لتحسين التجربة وتسريع التحصيل."
-							]
+							"paragraphs": ["تحصّل المدفوعات بسرعة عبر Paddle مع خيارات دفع متعددة لتحسين التجربة وتسريع التحصيل."]
 						},
 						"webhooksPaddle": {
 							"title": "تكامل الويبهوك",
-							"paragraphs": [
-								"استقبل إشعارات فورية عن أحداث الدفع عبر الويبهوك؛ اشترك في حدث transactions.completed لمتابعة حالة الدفع."
-							]
+							"paragraphs": ["استقبل إشعارات فورية عن أحداث الدفع عبر الويبهوك؛ اشترك في حدث transactions.completed لمتابعة حالة الدفع."]
 						}
 					}
 				},
@@ -1519,9 +1580,7 @@
 						},
 						"invoiceSync": {
 							"title": "مزامنة الفواتير",
-							"paragraphs": [
-								"عند تفعيل مزامنة الفواتير، يرسل Flexprice الفواتير المكتملة تلقائياً إلى Tabs."
-							]
+							"paragraphs": ["عند تفعيل مزامنة الفواتير، يرسل Flexprice الفواتير المكتملة تلقائياً إلى Tabs."]
 						}
 					}
 				},
@@ -1638,11 +1697,13 @@
 			"secretKeyHint": "يمكنك العثور على مفتاح Stripe السري في إعدادات API",
 			"pullFromStripe": "سحب من Stripe",
 			"pushToStripe": "إرسال إلى Stripe",
+			"customerSyncHint": "إرسال إلى Stripe. مطلوب لـ Stripe Tax — لا يمكن حساب الضريبة لعميل غير موجود في Stripe.",
 			"webhookSecretDescription": "هذا المفتاح مطلوب للتحقق من أحداث Webhook القادمة من Stripe",
 			"webhookSecretPlaceholder": "whsec_...",
 			"webhookIntro": "أضف عنوان URL التالي إلى إعدادات Webhook في Stripe:",
 			"webhookEventsIntro": "قم بتفعيل الأحداث التالية في إعدادات Webhook داخل Stripe:",
 			"labels": {
+				"customers": "العملاء",
 				"plans": "الخطط",
 				"invoices": "الفواتير",
 				"prices": "الأسعار",

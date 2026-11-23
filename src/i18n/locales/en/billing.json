@@ -19,6 +19,10 @@
 			"voidSuccess": "Invoice voided successfully",
 			"downloadError": "Failed to download invoice"
 		},
+		"hostedInvoice": {
+			"menuLabel": "View hosted invoice",
+			"unavailable": "No hosted invoice link is available for this invoice"
+		},
 		"edit": {
 			"pageTitle": "Edit Invoice",
 			"detailsTitle": "Invoice Details",
@@ -144,12 +148,20 @@
 				"subtotal": "Subtotal",
 				"discount": "Discount",
 				"prepaidCredits": "Prepaid Credits",
+				"taxBreakdownAria": "Show tax breakdown",
+				"netPayableAria": "How net payable is calculated",
 				"tax": "Tax",
+				"taxInclusiveTotal": "Total inclusive tax applied",
+				"taxExclusiveTotal": "Total exclusive tax applied",
+				"taxTotal": "Total tax",
 				"netPayable": "Net payable",
 				"netPayableTooltip": "Final amount due after applying credit notes",
 				"amountPaid": "Amount paid",
 				"overpaid": "Overpaid",
-				"remainingBalance": "Remaining balance"
+				"remainingBalance": "Remaining balance",
+				"grantUsage": "Usage",
+				"grantCovered": "Entitlement",
+				"grantBilled": "Billed"
 			},
 			"creditLineTable": {
 				"creditQuantity": "Credit Quantity",
@@ -181,7 +193,19 @@
 			"billingPeriod": "Billing Period",
 			"total": "Total"
 		},
-		"writeDenied": "You don't have permission to modify invoices"
+		"writeDenied": "You don't have permission to modify invoices",
+		"recompute": {
+			"menuLabel": "Recalculate Invoice",
+			"menuDisabledStatus": "Only draft, skipped or finalized invoices can be recalculated",
+			"confirmTitle": "Recalculate this invoice?",
+			"confirmDescription": "Line items and totals will be recomputed from the current pricing and usage data. If this invoice's line items were edited by hand, recalculation will be refused so those edits are not lost.",
+			"confirmAction": "Recalculate",
+			"success": "Invoice recalculated from current pricing and usage.",
+			"failed": "Unable to recalculate invoice",
+			"menuDisabledType": "Only subscription invoices can be recalculated — a one-off invoice has no usage to recompute from",
+			"menuDisabledAlready": "This invoice has already been replaced by a recalculated one",
+			"confirmDescriptionFinalized": "This invoice will be voided and replaced by a new one, recalculated from the current pricing and usage data. The replacement gets its own invoice number and appears once the process completes."
+		}
 	},
 	"creditNotes": {
 		"title": "Credit Notes",
@@ -261,7 +285,10 @@
 			"serviceIssue": "Service Issue",
 			"billingError": "Billing Error",
 			"subscriptionCancellation": "Subscription Cancellation"
-		}
+		},
+		"subtotalLabel": "Subtotal",
+		"taxLabel": "Tax",
+		"calculatingTax": "Calculating tax"
 	},
 	"subscriptions": {
 		"title": "Subscriptions",
@@ -368,6 +395,7 @@
 			"removing": "Removing…"
 		},
 		"changeQuantity": "Change quantity",
+		"editCharge": "Edit charge",
 		"reviewChanges": "Review changes",
 		"quantity": "Quantity",
 		"quantityPlaceholder": "e.g. 10",
@@ -375,6 +403,9 @@
 		"selectDate": "Select date",
 		"quantityModify": {
 			"updatingDescription": "You are updating quantity for <highlight>{{name}}</highlight>.",
+			"updatingChargeDescription": "You are updating <highlight>{{name}}</highlight>.",
+			"pricePerUnit": "Price",
+			"pricePlaceholder": "e.g. 20.00",
 			"effectiveDateHint": "Defaults to the current period start for arrear charges, or the current period end for advance charges, ensuring the charge takes effect this period. Clear the date to apply immediately.",
 			"preview": "Preview",
 			"applyChanges": "Apply changes"
@@ -383,9 +414,8 @@
 			"noData": "No preview data.",
 			"columnType": "Type",
 			"columnQty": "Qty",
+			"columnPrice": "Price",
 			"columnPeriod": "Period",
-			"directionIncrease": "Increase",
-			"directionDecrease": "Decrease",
 			"subscriptionUpdated": "<bold>Subscription</bold> will be updated to reflect these changes.",
 			"noExtraBillingDetails": "No additional billing details were included in this preview.",
 			"noBillingChanges": "No billing changes returned for this preview."
@@ -419,7 +449,11 @@
 			},
 			"toast": {
 				"addonAddedSuccess": "Addon added successfully",
-				"addonAddFailed": "Failed to add addon"
+				"addonAddFailed": "Failed to add addon",
+				"addonsAddedSuccess_one": "Addon added successfully",
+				"addonsAddedSuccess_other": "{{count}} addons added successfully",
+				"addonsUpdatedSuccess": "Addons updated successfully",
+				"addonsUpdateFailed": "Failed to update addons"
 			},
 			"columns": {
 				"charge": "Charge",
@@ -447,7 +481,41 @@
 				"none": "No proration",
 				"noneDescription": "No proration adjustments."
 			},
-			"adding": "Adding..."
+			"adding": "Adding...",
+			"titleAdd": "Add addons",
+			"titleModify": "Modify addons",
+			"addAnotherAddon": "Add another addon",
+			"chargesCount_one": "{{count}} charge",
+			"chargesCount_other": "{{count}} charges",
+			"removeAddon": "Remove {{name}}",
+			"maxAddonsReached": "You can add up to {{max}} addons in one change.",
+			"changeAt": {
+				"label": "Starts",
+				"immediate": "Now",
+				"immediateDescription": "Attach the addon right away.",
+				"endOfPeriod": "End of current period",
+				"endOfPeriodDescription": "Attach when the current billing period ends.",
+				"endOfPeriodDescriptionWithDate": "Attach on {{date}}, when the current billing period ends.",
+				"custom": "Custom date",
+				"customDescription": "Pick the date the addon starts.",
+				"datePlaceholder": "Select start date",
+				"dateRequired": "Select a start date"
+			},
+			"currentAddons": "Current addons",
+			"addAddon": "Add addon",
+			"removing": "Removing",
+			"undoRemoval": "Undo",
+			"endAt": {
+				"label": "Ends",
+				"immediateDescription": "Remove the addon right away.",
+				"endOfPeriodDescription": "Remove when the current billing period ends.",
+				"endOfPeriodDescriptionWithDate": "Remove on {{date}}, when the current billing period ends.",
+				"customDescription": "Pick the date the addon ends.",
+				"dateRequired": "Select an end date",
+				"summaryNow": "Ends now",
+				"summaryPeriodEnd": "Ends at period end",
+				"summaryOn": "Ends {{date}}"
+			}
 		},
 		"editDetailsHeader": {
 			"title": "Subscription Details",
@@ -548,6 +616,21 @@
 		"learnMore": "Learn More",
 		"recordedReceivedHint": "Optionally select the date when this payment was actually received",
 		"paymentMethodUnavailable": "{{method}} payment processing is not available yet. Please use offline payment method or credits instead.",
+		"savedMethod": "Saved Method",
+		"selectSavedMethod": "Select a saved method",
+		"noChargeableMethod": "No saved method, use Payment Link",
+		"loadingSavedMethods": "Loading saved methods…",
+		"chargeFailed": "Charge failed. Check the payment for details.",
+		"chargeSavedCardRazorpayHint": "Razorpay charges settle in about 36 hours; above ₹15,000 the customer must approve the debit from their bank.",
+		"chargeSubmitted": "Charge submitted. The payment updates once the provider confirms it.",
+		"chargeSavedMethod": "Charge Saved Method",
+		"chargeSavedMethodDescription": "Charge the customer's saved card or UPI mandate",
+		"cardMethod": "Card",
+		"upiMethod": "UPI",
+		"mandateCount_one": "{{count}} mandate",
+		"mandateCount_other": "{{count}} mandates",
+		"defaultMethod": "Default",
+		"savedMethodsLookupFailed": "Could not load saved methods from the provider.",
 		"amountPlaceholder": "0.00",
 		"recordPaymentButton": "Record",
 		"amountDueInline": "Amount Due: {{amount}}",
@@ -921,6 +1004,9 @@
 			"creditsPlaceholder": "credits",
 			"creditPreviewSuffix": " will be credited to the wallet",
 			"expiryDate": "Expiry Date",
+			"effectiveDate": "Effective Date",
+			"effectiveDatePlaceholder": "Pick a date",
+			"effectiveDateHint": "Credits are available for consumption from this date. Leave empty to use the current time.",
 			"priority": "Priority",
 			"priorityPlaceholder": "Enter priority",
 			"referenceId": "Reference ID",
@@ -937,7 +1023,18 @@
 			"typePurchasedDesc": "Add credits that require payment.",
 			"skipInvoice": "Skip invoice",
 			"generateInvoiceAction": "Generate invoice",
-			"checkoutLink": "Checkout link"
+			"checkoutLink": "Checkout link",
+			"unavailableWithCouponHint": "Not available with a coupon"
+		},
+		"pendingCheckout": {
+			"title": "A checkout is already pending for this wallet",
+			"description": "Nothing was created for this top-up. The customer has an unfinished checkout on this wallet, and it has to be settled or cancelled before another one can start.",
+			"sessionId": "Pending session",
+			"expiresAt": "Expires",
+			"link": "Link",
+			"openExisting": "Open pending checkout",
+			"cancelAndRetry": "Cancel it and start a new checkout",
+			"cancelHint": "Cancelling voids the pending checkout link. If the customer is paying it right now, that payment may still land — check the wallet before creating another."
 		},
 		"debit": {
 			"title": "Manual Debit",

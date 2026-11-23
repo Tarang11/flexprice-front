@@ -16,6 +16,19 @@ export enum ADDON_PRORATION_BEHAVIOR {
 	NONE = 'none',
 }
 
+/** When an addon attach takes effect (request `change_at`). Mutually exclusive with `start_date`. */
+export enum ADDON_CHANGE_AT {
+	IMMEDIATE = 'immediate',
+	END_OF_PERIOD = 'end_of_period',
+}
+
+/** UI-only timing for an addon attach or removal: a named `change_at`, or a custom date (`start_date` / `effective_date`). */
+export enum ADDON_CHANGE_TIMING {
+	IMMEDIATE = 'immediate',
+	END_OF_PERIOD = 'end_of_period',
+	CUSTOM = 'custom',
+}
+
 export interface ExtendedAddon extends Addon {
 	prices: Price[];
 	entitlements: Entitlement[];
@@ -72,6 +85,15 @@ export interface GetAddonsResponse extends Pagination {
 export interface GetAddonByFilterPayload extends Pagination {
 	filters: TypedBackendFilter[];
 	sort: TypedBackendSort[];
+	expand?: string;
+}
+
+// Returned by POST /addons/:id/sync/subscriptions. The endpoint is async, so the
+// body carries the started workflow handle, not the sync result.
+export interface SynchronizeAddonPricesWithSubscriptionResponse {
+	message: string;
+	workflow_id?: string;
+	run_id?: string;
 }
 
 export interface AddonFilter extends Omit<QueryFilter, 'sort'>, TimeRangeFilter {

@@ -7,7 +7,7 @@ import { portalReturnUrl } from '../portalReturnUrl';
 import type { PaymentGatewayType } from '@/types/dto/CustomerPortalBilling';
 import usePortalIntegrations from '../usePortalIntegrations';
 import { refreshAfterPayment } from '../refetchPortalQueries';
-import { openPaymentUrl } from '@/utils/common/openPaymentUrl';
+import { goToCheckout } from '@/components/customer-portal/goToCheckout';
 
 /**
  * Starts payment for an invoice and follows the returned action.
@@ -39,15 +39,15 @@ const usePayInvoice = (provider?: PaymentGatewayType) => {
 				// provider qualifies, so the choice is made here rather than left unset.
 				...(linkProvider ? { payment_provider: linkProvider } : {}),
 				idempotency_key: keys.get(invoiceId),
-				success_url: portalReturnUrl(),
-				cancel_url: portalReturnUrl(),
+				success_url: portalReturnUrl('success'),
+				cancel_url: portalReturnUrl('failure'),
 			});
 		},
 		onSuccess: async (response, invoiceId) => {
 			const url = response.payment_action?.url;
 			if (url) {
 				setActionUrl(url);
-				openPaymentUrl(url);
+				goToCheckout(url);
 				return;
 			}
 			keys.delete(invoiceId);

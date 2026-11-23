@@ -31,7 +31,7 @@ const axiosClient: AxiosInstance = axios.create({
 // Everything else needs to wait rather than fire with no X-Environment-ID: on a fresh login,
 // getActiveEnvironmentId() is a synchronous localStorage read that's empty until
 // useEnvironment()'s own fetch has resolved, and the backend 403s without the header.
-const ENV_GATE_EXEMPT_PATHS = ['/environments', '/users/me'];
+const ENV_GATE_EXEMPT_PATHS = ['/environments', '/users/me', '/auth/password'];
 
 axiosClient.interceptors.request.use(
 	async (config: InternalAxiosRequestConfig) => {
@@ -102,6 +102,15 @@ axiosClient.interceptors.response.use(
 			const msg = getApiErrorMessage(errorData, fallback);
 			const rejection = new Error(msg);
 			(rejection as Error & { cause?: unknown }).cause = errorData ?? error;
+			// The status is attached explicitly rather than left to be recovered from the body:
+			// error responses do not reliably carry `http_status_code` (a 429 from an edge proxy
+			// carries no JSON body at all), and callers that back off need to tell a rate limit
+			// apart from a plain failure. `retryAfter` is the header's seconds value when sent.
+			(rejection as Error & { status?: number }).status = status;
+			const retryAfter = Number(error.response.headers?.['retry-after']);
+			if (Number.isFinite(retryAfter) && retryAfter >= 0) {
+				(rejection as Error & { retryAfter?: number }).retryAfter = retryAfter;
+			}
 			return Promise.reject(rejection);
 		} else if (error.request) {
 			// Request was made but no response received

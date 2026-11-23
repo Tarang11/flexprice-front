@@ -11,10 +11,11 @@ import { useNavigate } from 'react-router';
 import SubscriptionApi from '@/api/SubscriptionApi';
 import CustomerApi from '@/api/CustomerApi';
 import FeatureApi from '@/api/FeatureApi';
-import JsonCodeBlock from './JsonCodeBlock';
 import ProcessedEventsSection from './ProcessedEventsSection';
 import EventTrackerSection from './EventTrackerSection';
+import EventVersionsSection from './EventVersionsSection';
 import IdempotencyKeySection from './IdempotencyKeySection';
+import { getEventLookupVersions } from './getEventLookupVersions';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -32,13 +33,17 @@ const EventPropertiesDrawer: FC<Props> = ({ isOpen, onOpenChange, event }) => {
 		isLoading: loading,
 		error: loadError,
 	} = useQuery<GetEventDebugResponse, Error>({
-		queryKey: ['eventDebug', event?.id],
-		queryFn: () => EventsApi.getEventDebug(event!.id),
-		enabled: isOpen && !!event?.id,
+		queryKey: ['eventDebug', event?.id, event?.external_customer_id],
+		queryFn: () => EventsApi.getEventDebug(event!.id, event!.external_customer_id),
+		enabled: isOpen && !!event?.id && !!event.external_customer_id,
 	});
 
 	const displayEvent = debugResponse?.event ?? event;
 	const processedEvents = useMemo(() => debugResponse?.processed_events ?? [], [debugResponse]);
+	const ingestedVersions = useMemo(
+		() => getEventLookupVersions(debugResponse?.events, debugResponse?.event ?? event),
+		[debugResponse, event],
+	);
 	const resolvedCustomerId =
 		processedEvents?.[0]?.customer_id ??
 		(displayEvent?.customer_id && displayEvent.customer_id.trim().length > 0 ? displayEvent.customer_id : undefined) ??
@@ -103,12 +108,6 @@ const EventPropertiesDrawer: FC<Props> = ({ isOpen, onOpenChange, event }) => {
 		}
 	};
 
-	const handleCopyCode = () => {
-		if (!displayEvent) return;
-		navigator.clipboard.writeText(JSON.stringify(displayEvent, null, 2));
-		toast.success(t('events.debugger.propertiesCopied'));
-	};
-
 	const showProcessedOnly = useMemo(() => processedEvents.length > 0, [processedEvents.length]);
 
 	const sheetTitle = showProcessedOnly ? t('events.debugger.processedEventsTitle') : t('events.debugger.eventDetailsTitle');
@@ -149,9 +148,7 @@ const EventPropertiesDrawer: FC<Props> = ({ isOpen, onOpenChange, event }) => {
 						</div>
 					) : null}
 
-					<div className='space-y-3'>
-						<JsonCodeBlock value={displayEvent} title={t('labels.eventDetails')} onCopy={handleCopyCode} />
-					</div>
+					{!loading && <EventVersionsSection events={ingestedVersions} />}
 				</div>
 			</div>
 		</Sheet>

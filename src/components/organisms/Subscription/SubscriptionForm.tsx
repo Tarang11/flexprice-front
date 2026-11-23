@@ -1,6 +1,7 @@
 import {
 	Select,
 	FormHeader,
+	AddButton,
 	Label,
 	DecimalUsageInput,
 	DatePicker,
@@ -18,6 +19,7 @@ import { PlanResponse } from '@/types';
 import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import SubscriptionCreditGrantTable from '@/components/molecules/CreditGrant/SubscriptionCreditGrantTable';
+import SubscriptionEntitlementGrantDialog from '@/components/molecules/SubscriptionEntitlementsSection/SubscriptionEntitlementGrantDialog';
 import SubscriptionAddonTable from '@/components/molecules/SubscriptionAddonTable/SubscriptionAddonTable';
 import { BILLING_CYCLE } from '@/models/Subscription';
 import {
@@ -41,7 +43,6 @@ import CreditGrantApi from '@/api/CreditGrantApi';
 import { PriceApi } from '@/api/PriceApi';
 import EntitlementApi from '@/api/EntitlementApi';
 import AddonApi from '@/api/AddonApi';
-import { AddAddonToSubscriptionRequest } from '@/types/dto/Addon';
 import { SubscriptionDiscountTable, EntitlementOverridesTable } from '@/components/molecules';
 import { DataType, FilterOperator } from '@/types/common/QueryBuilder';
 import SubscriptionTaxAssociationTable from '@/components/molecules/SubscriptionTaxAssociationTable';
@@ -70,6 +71,10 @@ import AdditionalPlanPricesSection from './AdditionalPlanPricesSection';
 import LineItemGroupingSection from './LineItemGroupingSection';
 import { Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import SubscriptionFxRateTable from '@/components/molecules/SubscriptionFxRateTable';
+import { useTenantFxRate } from '@/hooks/useTenantFxRate';
+import { useClearOnFxPairChange } from '@/hooks/useClearOnFxPairChange';
+import { canSetSubscriptionFxRates, resolveBillingCurrency } from '@/utils/fx/subscriptionFx';
 
 const BillingAccordionInfoTooltip = ({ description, ariaLabel }: { description: string; ariaLabel: string }) => (
 	<Tooltip
@@ -171,11 +176,21 @@ const SubscriptionForm = ({
 		onChange: (customer: Customer | undefined) => void;
 		hint?: string;
 	};
+	/** Inline subscription-create 400 for fx_rates, with the offending row indexes. */
 }) => {
 	const { t } = useTranslation(['customers', 'common']);
 	const isCustomerSelectionPending = !!customerPicker && !customerPicker.value;
 	// Fetch plan prices via shared hook (same cache key + canonical active filter as CreateCustomerSubscriptionPage)
 	const { data: selectedPlanPrices } = usePlanPrices(state.selectedPlan);
+	const billingCurrency = resolveBillingCurrency(state.currency, [state.invoicingCustomer, customerPicker?.value, subscriberCustomer]);
+	const fxRatesAllowed = canSetSubscriptionFxRates(state.currency, billingCurrency);
+	const showFxOverrides = fxRatesAllowed && (!isDisabled || state.fxRates.length > 0);
+	const { data: tenantFxRate } = useTenantFxRate(fxRatesAllowed && !isDisabled ? state.currency : undefined, billingCurrency);
+
+	// Rows are valid only for the charge → billing pair they were entered for.
+	const fxPair = fxRatesAllowed ? `${state.currency.toLowerCase()}->${billingCurrency}` : undefined;
+	const clearFxRates = useCallback(() => setState((prev) => ({ ...prev, fxRates: [] })), [setState]);
+	useClearOnFxPairChange(fxPair, !isDisabled, state.fxRates.length > 0, clearFxRates);
 
 	// Split plan prices into what attaches by default (exact cadence + ONETIME) vs. what
 	// the user can opt into via the "Also available on this plan" section (compatible but
@@ -450,14 +465,6 @@ const SubscriptionForm = ({
 		};
 	};
 
-	const getEmptyAddon = (): Partial<AddAddonToSubscriptionRequest> => {
-		return {
-			addon_id: '',
-			start_date: undefined,
-			metadata: {},
-		};
-	};
-
 	// Fetch plan-level credit grants to display them alongside subscription-level grants
 	const { data: selectedPlanCreditGrants } = useQuery({
 		queryKey: ['creditGrants', state.selectedPlan],
@@ -485,6 +492,7 @@ const SubscriptionForm = ({
 	const [editedPlanGrantIds, setEditedPlanGrantIds] = useState<Set<string>>(new Set());
 	// Add subscription charge dialog open state (single-phase only)
 	const [isAddChargeDialogOpen, setAddChargeDialogOpen] = useState(false);
+	const [isGrantDialogOpen, setGrantDialogOpen] = useState(false);
 	// When set, dialog is in edit mode for this added line item (tempId)
 	const [editingAddedChargeTempId, setEditingAddedChargeTempId] = useState<string | null>(null);
 
@@ -766,6 +774,29 @@ const SubscriptionForm = ({
 					label={t('organisms.subscriptionForm.currencyRequired')}
 					disabled={isDisabled || isLoadingPlanDetails}
 					placeholder={t('organisms.subscriptionForm.selectCurrency')}
+				/>
+			)}
+
+			{/* Billing Currency (read-only) and subscription FX overrides */}
+			{state.selectedPlan && !isLoadingPlanDetails && billingCurrency && (
+				<Input
+					label={t('organisms.subscriptionForm.billingCurrency')}
+					value={billingCurrency.toUpperCase()}
+					disabled
+					description={t('organisms.subscriptionForm.billingCurrencyHint', {
+						billing: billingCurrency.toUpperCase(),
+						charge: state.currency.toUpperCase(),
+					})}
+				/>
+			)}
+			{state.selectedPlan && !isLoadingPlanDetails && billingCurrency && showFxOverrides && (
+				<SubscriptionFxRateTable
+					data={state.fxRates}
+					onChange={(rows) => setState((prev) => ({ ...prev, fxRates: rows }))}
+					disabled={isDisabled}
+					chargeCurrency={state.currency}
+					billingCurrency={billingCurrency}
+					tenantRate={tenantFxRate}
 				/>
 			)}
 
@@ -1115,7 +1146,6 @@ const SubscriptionForm = ({
 			{state.selectedPlan && !isLoadingPlanDetails && (
 				<div className='mt-6 pt-6 border-t border-line'>
 					<SubscriptionAddonTable
-						getEmptyAddon={getEmptyAddon}
 						data={state.addons || []}
 						onChange={(data) => {
 							setState((prev) => ({ ...prev, addons: data }));
@@ -1128,18 +1158,40 @@ const SubscriptionForm = ({
 				</div>
 			)}
 
-			{/* Entitlements Section */}
-			{state.selectedPlan && !isLoadingPlanDetails && allEntitlements.length > 0 && (
+			{/* Entitlements: the plan's and addons' (overridable) plus subscription entitlements drafted here */}
+			{state.selectedPlan && !isLoadingPlanDetails && (
 				<div className='mt-6 pt-6 border-t border-line'>
 					<div className='space-y-4'>
-						<FormHeader className='mb-0' title={t('organisms.subscriptionForm.entitlements')} variant='sub-header' />
+						<div className='flex items-center justify-between'>
+							<FormHeader className='mb-0' title={t('organisms.subscriptionForm.entitlements')} variant='sub-header' />
+							<AddButton onClick={() => setGrantDialogOpen(true)} disabled={isDisabled} />
+						</div>
 						<EntitlementOverridesTable
 							entitlements={allEntitlements}
 							overrides={state.entitlementOverrides}
 							onOverrideChange={handleEntitlementOverride}
 							onOverrideReset={handleEntitlementOverrideReset}
+							subscriptionGrants={state.subscriptionEntitlementGrants}
+							onRemoveSubscriptionGrant={(index) =>
+								setState((prev) => ({
+									...prev,
+									subscriptionEntitlementGrants: prev.subscriptionEntitlementGrants.filter((_, i) => i !== index),
+								}))
+							}
+							currency={state.currency}
+							disabled={isDisabled}
 						/>
 					</div>
+					{isGrantDialogOpen && (
+						<SubscriptionEntitlementGrantDialog
+							isOpen={isGrantDialogOpen}
+							onOpenChange={setGrantDialogOpen}
+							currency={state.currency}
+							onDraft={(draft) =>
+								setState((prev) => ({ ...prev, subscriptionEntitlementGrants: [...prev.subscriptionEntitlementGrants, draft] }))
+							}
+						/>
+					)}
 				</div>
 			)}
 

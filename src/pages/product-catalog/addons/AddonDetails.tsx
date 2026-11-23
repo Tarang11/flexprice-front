@@ -23,12 +23,15 @@ import { RouteNames } from '@/core/routes/Routes';
 import { Price } from '@/models/Price';
 import { useBreadcrumbsStore } from '@/store/useBreadcrumbsStore';
 import AddonApi from '@/api/AddonApi';
+import { WorkflowApi } from '@/api';
+import { getAddonPriceSyncWorkflowFilters } from '@/constants/workflow';
+import { DataType, FilterOperator, SortDirection } from '@/types/common/QueryBuilder';
 import EntitlementApi from '@/api/EntitlementApi';
 import { copyToClipboard, getPriceTypeLabel } from '@/utils/common/helper_functions';
 import { ChargeActionHandlers } from '@/types/common';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Copy, EyeOff, FileText, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Copy, EyeOff, FileText, Plus, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
@@ -36,13 +39,12 @@ import { Card } from '@/components/atoms';
 import formatChips from '@/utils/common/format_chips';
 import { ChargeValueCell } from '@/components/molecules';
 import { BILLING_PERIOD } from '@/constants/constants';
-import { FEATURE_TYPE } from '@/models/Feature';
 import { getFeatureTypeChips } from '@/components/molecules/CustomerUsageTable/CustomerUsageTable';
-import { formatAmount } from '@/components/atoms/Input/Input';
-import { Entitlement } from '@/models/Entitlement';
 import { ENTITY_STATUS } from '@/models';
 import { ENTITLEMENT_ENTITY_TYPE } from '@/models/Entitlement';
 import { EntitlementResponse } from '@/types/dto';
+import type { TFunction } from 'i18next';
+import { formatAllowanceValue, formatAllowanceReset, isParallelAllowance } from '@/utils/entitlement/allowanceLabel';
 
 const formatBillingPeriod = (billingPeriod: string) => {
 	switch (billingPeriod.toUpperCase()) {
@@ -180,36 +182,9 @@ const getChargeColumns = (naLabel: string, handlers: ChargeActionHandlers): Colu
 	},
 ];
 
-const getFeatureValue = (entitlement: Entitlement, unlimited: string, unitLabel: string, unitsLabel: string) => {
-	const value = entitlement.usage_limit?.toFixed() || '';
-
-	switch (entitlement.feature_type) {
-		case FEATURE_TYPE.STATIC:
-			return entitlement.static_value;
-		case FEATURE_TYPE.METERED: {
-			const unitPlural = entitlement.feature?.unit_plural || unitsLabel;
-			const unitSingular = entitlement.feature?.unit_singular || unitLabel;
-			return (
-				<span className='flex items-end gap-1'>
-					{formatAmount(value || unlimited)}
-					<span className='text-content-slate-muted text-sm font-normal font-sans'>
-						{value ? (Number(value) > 0 ? unitPlural : unitSingular) : unitPlural}
-					</span>
-				</span>
-			);
-		}
-		case FEATURE_TYPE.BOOLEAN:
-			return entitlement.is_enabled ? 'Yes' : 'No';
-		default:
-			return '--';
-	}
-};
-
 const getEntitlementColumns = (
 	_addonId: string,
-	unlimited: string,
-	unitLabel: string,
-	unitsLabel: string,
+	t: TFunction<'catalog'>,
 	canWriteEntitlement: boolean,
 	entitlementWriteDeniedTooltip: string,
 ): ColumnData<EntitlementResponse>[] => [
@@ -228,7 +203,18 @@ const getEntitlementColumns = (
 	{
 		title: 'Value',
 		render(row) {
-			return getFeatureValue(row, unlimited, unitLabel, unitsLabel);
+			return (
+				<span className='flex items-center gap-2'>
+					<span>{formatAllowanceValue(row, t)}</span>
+					{isParallelAllowance(row) && <Chip variant='default' label={t('entitlements.allowance.separateAllowances')} />}
+				</span>
+			);
+		},
+	},
+	{
+		title: 'Usage Reset',
+		render(row) {
+			return <span className='capitalize'>{formatAllowanceReset(row, t)}</span>;
 		},
 	},
 	{
@@ -269,6 +255,7 @@ const AddonDetails = () => {
 	const canWriteAddon = can('addon', 'write');
 	const canWriteEntitlement = can('entitlement', 'write');
 	const canWritePrice = can('price', 'write');
+	const queryClient = useQueryClient();
 	const [selectedPriceForEdit, setSelectedPriceForEdit] = useState<Price | null>(null);
 	const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
 	const [selectedPriceForDetailsEdit, setSelectedPriceForDetailsEdit] = useState<Price | null>(null);
@@ -286,6 +273,80 @@ const AddonDetails = () => {
 			return await AddonApi.Get(id!);
 		},
 		enabled: !!id,
+	});
+
+	// Addon usage-price sync status (how many associations are behind). Fetched via
+	// the search endpoint with expand=price_sync_status, which the single GET does not carry.
+	const { data: addonSyncStatus } = useQuery({
+		queryKey: ['addonSyncStatus', id],
+		queryFn: async () => {
+			const res = await AddonApi.ListByFilter({
+				filters: [{ field: 'id', operator: FilterOperator.EQUAL, data_type: DataType.STRING, value: { string: id! } }],
+				sort: [],
+				limit: 1,
+				offset: 0,
+				expand: 'price_sync_status',
+			});
+			return res.items[0]?.price_sync_status ?? null;
+		},
+		enabled: !!id,
+	});
+	const isFullySynced = addonSyncStatus?.synced ?? false;
+	const unsyncedCount = addonSyncStatus?.unsynced_association_count ?? 0;
+
+	const { data: syncWorkflowsData } = useQuery({
+		queryKey: ['addonSyncWorkflows', id],
+		queryFn: async () =>
+			WorkflowApi.search({
+				filters: getAddonPriceSyncWorkflowFilters(id!),
+				sort: [{ field: 'start_time', direction: SortDirection.DESC }],
+				limit: 1,
+				offset: 0,
+			}),
+		enabled: !!id,
+		refetchInterval: (query) => {
+			const data = query.state.data as { items?: { status?: string }[] } | undefined;
+			const latest = data?.items?.[0];
+			return latest?.status === 'Running' ? 60000 : false;
+		},
+	});
+
+	// Latest run by timestamp (first item when sorted by start_time desc); scope to this addon when entity_id is set.
+	const addonRuns = useMemo(
+		() => syncWorkflowsData?.items?.filter((w) => !w.entity_id || w.entity_id === id) ?? [],
+		[syncWorkflowsData?.items, id],
+	);
+	const latestRun = addonRuns[0];
+	const isSyncRunning = latestRun?.status === 'Running';
+	const isTerminalSyncStatus = latestRun?.status === 'Completed' || latestRun?.status === 'Failed';
+
+	// Refetch addon + sync status once a sync we started (or one already running on load) reaches a terminal status.
+	const wasSyncRunning = useRef(isSyncRunning);
+	const awaitingAddonRefresh = useRef(false);
+	const workflowKeyWhenSyncStarted = useRef<string | undefined>(undefined);
+	useEffect(() => {
+		const finishedObservedRun = wasSyncRunning.current && !isSyncRunning;
+		const finishedStartedRun =
+			awaitingAddonRefresh.current && isTerminalSyncStatus && latestRun?.run_id !== workflowKeyWhenSyncStarted.current;
+		if (finishedObservedRun || finishedStartedRun) {
+			awaitingAddonRefresh.current = false;
+			void queryClient.invalidateQueries({ queryKey: ['fetchAddon', id] });
+			void queryClient.invalidateQueries({ queryKey: ['addonSyncStatus', id] });
+		}
+		wasSyncRunning.current = isSyncRunning;
+	}, [isSyncRunning, isTerminalSyncStatus, latestRun?.run_id, id, queryClient]);
+
+	const { mutate: syncAddon, isPending: isSyncing } = useMutation({
+		mutationFn: () => AddonApi.synchronizeAddonPricesWithSubscription(id!),
+		onSuccess: () => {
+			toast.success('Sync has been started and will take up to 1 hour to complete.');
+			awaitingAddonRefresh.current = true;
+			workflowKeyWhenSyncStarted.current = latestRun?.run_id;
+			void queryClient.invalidateQueries({ queryKey: ['addonSyncWorkflows', id] });
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || 'Error synchronizing addon with subscriptions');
+		},
 	});
 
 	const { mutate: archiveAddon } = useMutation({
@@ -315,6 +376,7 @@ const AddonDetails = () => {
 		},
 		onSuccess: () => {
 			void refetchQueries(['fetchAddon']);
+			void queryClient.invalidateQueries({ queryKey: ['addonSyncStatus', id] });
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || 'Error terminating price');
@@ -340,7 +402,10 @@ const AddonDetails = () => {
 		setIsPriceDialogOpen(false);
 		setSelectedPriceForEdit(null);
 		void refetchQueries(['fetchAddon']);
-	}, []);
+		// A price change can move the addon's usage sequence, so the sync status must be
+		// refetched or "Sync Usage Charges" stays disabled while the user is on this page.
+		void queryClient.invalidateQueries({ queryKey: ['addonSyncStatus', id] });
+	}, [id, queryClient]);
 
 	const handleTerminateConfirm = useCallback(
 		async (endDate: string | undefined) => {
@@ -428,6 +493,38 @@ const AddonDetails = () => {
 			heading={addonData?.name}
 			headingCTA={
 				<>
+					{canWriteAddon ? (
+						<Tooltip
+							content={
+								isFullySynced
+									? 'All subscriptions are up to date'
+									: unsyncedCount > 0
+										? `${unsyncedCount} subscription(s) behind this addon's usage prices`
+										: 'Sync overridden and new usage charges to existing subscriptions'
+							}>
+							<span tabIndex={0} className='inline-block'>
+								<Button
+									onClick={() => syncAddon()}
+									disabled={isSyncing || isSyncRunning || isFullySynced}
+									isLoading={isSyncing}
+									variant={'outline'}
+									className='flex gap-2'>
+									<RefreshCw />
+									Sync Usage Charges
+								</Button>
+							</span>
+						</Tooltip>
+					) : (
+						<Tooltip content={t('catalog:addons.writeDeniedTooltip')}>
+							<span tabIndex={0} className='inline-block'>
+								<Button disabled variant={'outline'} className='flex gap-2'>
+									<RefreshCw />
+									Sync Usage Charges
+								</Button>
+							</span>
+						</Tooltip>
+					)}
+
 					{canWriteAddon ? (
 						<Button onClick={() => setAddonDrawerOpen(true)} variant={'outline'} className='flex gap-2'>
 							<Pencil />
@@ -533,14 +630,7 @@ const AddonDetails = () => {
 						<FlexpriceTable
 							showEmptyRow
 							data={addonData.entitlements || []}
-							columns={getEntitlementColumns(
-								addonData.id,
-								t('common:labels.unlimited'),
-								t('catalog:features.form.unitDefault'),
-								t('catalog:features.form.unitsDefault'),
-								canWriteEntitlement,
-								t('catalog:plans.entitlementsTab.writeDeniedTooltip'),
-							)}
+							columns={getEntitlementColumns(addonData.id, t, canWriteEntitlement, t('catalog:plans.entitlementsTab.writeDeniedTooltip'))}
 						/>
 					</Card>
 				) : (
